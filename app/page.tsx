@@ -1,8 +1,10 @@
+
+import type { Metadata } from 'next';
 import Header from "@/components/ui/header";
 import Main from "@/components/ui/main";
 import Footer from "@/components/ui/footer";
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'WiseCart',
 };
 

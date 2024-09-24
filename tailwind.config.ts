@@ -55,11 +55,31 @@ const config: Config = {
           '5': 'hsl(var(--chart-5))',
         },
       },
+      keyframes: {
+        bouceHorizontal: {
+          '0%, 100%': { transform: 'translateX(-25%)' },
+          '50%': { transform: 'translateX(0%)' },
+        }
+      },
+      animation: {
+        "bounceH": 'bouceHorizontal 1s infinite',
+      },
     },
   },
   plugins: [
     require('tailwindcss-react-aria-components'),
     require('tailwindcss-animate'),
+    require('daisyui'),
   ],
+  daisyui: {
+    themes: [
+      {
+        light: {
+          ...require("daisyui/src/theming/themes")["emerald"],
+          primary: "#36c32c",
+        },
+      },
+    ],
+  },
 };
 export default config;

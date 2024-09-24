@@ -7,7 +7,10 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
-  title: 'Next.js SaaS Starter',
+  title: {
+    template: '%s | Wisecart',
+    default: 'Home',
+  },
   description: 'Get started quickly with Next.js, Postgres, and Stripe.',
 };
 
