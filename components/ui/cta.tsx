@@ -1,6 +1,6 @@
 import { BiDollar } from "react-icons/bi"
 
-export default function CTA({ className, title="Register Now", btnClassName="", subtextClassName="", iconClassName="" }) {
+export default function CTA({ className="", title="Register Now", btnClassName="", subtextClassName="", iconClassName="" }) {
     return (
         <div className={`${className}`}>
             <a href="/login">

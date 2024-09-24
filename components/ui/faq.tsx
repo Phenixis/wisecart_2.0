@@ -41,7 +41,7 @@ export default function FAQ() {
                     <input type="checkbox" />
                     <div className="collapse-title text-xl font-bold text-secondary-content ">
                         <span className="text-neutral text-xl font-bold ">Q : </span>
-                        I have another question, where can I ask it ?
+                        I have another question, how can I ask it ?
                     </div>
                     <div className="collapse-content text-secondary-content">
                         <p>
