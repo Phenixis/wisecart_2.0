@@ -98,7 +98,7 @@ const signUpSchema = z.object({
   inviteId: z.string().optional(),
 });
 
-export const signUp = validatedAction(signUpSchema, async (data, formData) => {
+export const  signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, inviteId } = data;
 
   const existingUser = await db

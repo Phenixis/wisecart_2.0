@@ -55,6 +55,7 @@ export default function GeneralPage() {
                 placeholder="Enter your name"
                 defaultValue={user?.name || ''}
                 required
+                className='rounded-xl'
               />
             </div>
             <div>
@@ -66,6 +67,7 @@ export default function GeneralPage() {
                 placeholder="Enter your email"
                 defaultValue={user?.email || ''}
                 required
+                className='rounded-xl'
               />
             </div>
             {state.error && (
@@ -76,7 +78,7 @@ export default function GeneralPage() {
             )}
             <Button
               type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-primary hover:bg-green-600 text-white rounded-xl"
               disabled={isPending}
             >
               {isPending ? (

@@ -3,7 +3,7 @@ import { BiDollar } from "react-icons/bi"
 export default function CTA({ className="", title="Register Now", btnClassName="", subtextClassName="", iconClassName="" }) {
     return (
         <div className={`${className}`}>
-            <a href="/login">
+            <a href="/sign-up">
                 <button className={`btn btn-primary text-base font-bold ${btnClassName}`}>{title}</button>
             </a>
                 <div className={`font-semibold text-sm flex items-center ${subtextClassName}`}>

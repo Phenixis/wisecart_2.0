@@ -43,6 +43,7 @@ export function InviteTeamMember() {
               name="email"
               type="email"
               placeholder="Enter email"
+              className='rounded-xl'
               required
               disabled={!isOwner}
             />
@@ -73,7 +74,7 @@ export function InviteTeamMember() {
           )}
           <Button
             type="submit"
-            className="bg-orange-500 hover:bg-orange-600 text-white"
+            className="bg-primary hover:bg-green-600 text-white rounded-xl"
             disabled={isInvitePending || !isOwner}
           >
             {isInvitePending ? (

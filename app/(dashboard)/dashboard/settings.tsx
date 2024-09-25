@@ -47,7 +47,7 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
                 </p>
               </div>
               <form action={customerPortalAction}>
-                <Button type="submit" variant="outline">
+                <Button type="submit" variant="outline" className='rounded-xl'>
                   Manage Subscription
                 </Button>
               </form>

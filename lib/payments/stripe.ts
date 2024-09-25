@@ -152,6 +152,7 @@ export async function getStripePrices() {
 
   return prices.data.map((price) => ({
     id: price.id,
+    nickname: price.nickname,
     productId:
       typeof price.product === 'string' ? price.product : price.product.id,
     unitAmount: price.unit_amount,

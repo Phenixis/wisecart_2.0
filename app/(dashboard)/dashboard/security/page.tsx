@@ -70,6 +70,7 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className='rounded-xl'
               />
             </div>
             <div>
@@ -82,6 +83,7 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className='rounded-xl'
               />
             </div>
             <div>
@@ -93,6 +95,7 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className='rounded-xl'
               />
             </div>
             {passwordState.error && (
@@ -103,7 +106,7 @@ export default function SecurityPage() {
             )}
             <Button
               type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-primary hover:bg-green-600 text-white rounded-xl"
               disabled={isPasswordPending}
             >
               {isPasswordPending ? (
@@ -140,6 +143,7 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className='rounded-xl'
               />
             </div>
             {deleteState.error && (
@@ -148,7 +152,7 @@ export default function SecurityPage() {
             <Button
               type="submit"
               variant="destructive"
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 rounded-xl"
               disabled={isDeletePending}
             >
               {isDeletePending ? (
