@@ -6,6 +6,9 @@ import { SubmitButton } from './submit-button';
 // Prices are fresh for one hour max
 export const revalidate = 3600;
 
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
 export default async function PricingPage() {
   const [prices, products] = await Promise.all([
     getStripePrices(),
