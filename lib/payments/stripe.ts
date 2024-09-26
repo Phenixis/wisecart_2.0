@@ -8,7 +8,7 @@ import {
 } from '@/lib/db/queries';
 
 require("dotenv").config();
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe('sk_test_51PzFVaD6FWasBAbEl4d8J2zerNhbC4GbZ05pS91NHSpGgfDjMJLGbgPvii0nL1qZKeDLoI9mroXbsRuelrzfpn9j00CMwjDKsJ'!, {
   apiVersion: '2024-06-20',
 });
 

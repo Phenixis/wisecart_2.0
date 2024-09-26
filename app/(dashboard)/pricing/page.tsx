@@ -21,7 +21,7 @@ export default async function PricingPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid md:grid-cols-2 gap-8 max-w-xl mx-auto">
         <PricingCard
-          name={earlyAccessPlan?.name || 'Base'}
+          name={monthlyPrice?.nickname || 'Base'}
           price={monthlyPrice?.unitAmount || 800}
           interval={monthlyPrice?.interval || 'month'}
           trialDays={monthlyPrice?.trialPeriodDays || 7}
@@ -33,7 +33,7 @@ export default async function PricingPage() {
           priceId={monthlyPrice?.id}
         />
         <PricingCard
-          name={earlyAccessPlan?.name || 'Plus'}
+          name={yearlyPrice?.nickname || 'Plus'}
           price={yearlyPrice?.unitAmount || 1200}
           interval={yearlyPrice?.interval || 'month'}
           trialDays={yearlyPrice?.trialPeriodDays || 7}
