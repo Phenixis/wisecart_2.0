@@ -108,7 +108,7 @@ export const  signUp = validatedAction(signUpSchema, async (data, formData) => {
     .limit(1);
 
   if (existingUser.length > 0) {
-    return { error: 'Failed to create user. Please try again.' };
+    return { error: 'The email you provided is already connected to an account. Try to login instead.' };
   }
 
   const passwordHash = await hashPassword(password);
