@@ -1,8 +1,8 @@
 
 import type { Metadata } from 'next';
-import Header from "@/components/ui/header";
-import Main from "@/components/ui/main";
-import Footer from "@/components/ui/footer";
+import Header from "@/components/header";
+import Main from "@/components/main";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
     title: 'WiseCart',
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
     return (
-        <div className="min-h-screen w-screen bg-base-200 space-y-12">
+        <div className="min-h-screen w-screen bg-base-100 space-y-12">
             <Header />
             <Main />
             <Footer />

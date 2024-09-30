@@ -1,8 +1,8 @@
-import Hero from "@/components/ui/hero";
-import With from "@/components/ui/with";
-import Pricing from "@/components/ui/pricing";
-import FAQ from "@/components/ui/faq";
-import Problem from "@/components/ui/problem";
+import Hero from "@/components/hero";
+import With from "@/components/with";
+import Pricing from "@/components/pricing";
+import FAQ from "@/components/faq";
+import Problem from "@/components/problem";
 
 export default function Main() {
     return (

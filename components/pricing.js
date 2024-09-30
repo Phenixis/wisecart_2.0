@@ -11,7 +11,7 @@ export default function Pricing() {
     };
 
     return (
-        <section id="pricing" className="w-full bg-base-300 p-4 text-neutral space-y-4 rounded-xl">
+        <section id="pricing" className="w-full bg-base-200 p-4 text-neutral space-y-4 rounded-xl">
             <p className="text-3xl font-bold">Pricing</p>
             <div className="w-full">
                 <div className="join join-vertical w-full sm:hidden">
