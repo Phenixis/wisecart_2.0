@@ -3,7 +3,7 @@ import { ImCheckmark } from "react-icons/im";
 export default function With() {
 
     return (
-        <div id="features" className="xl:w-1/2 sm:w-[640px] items-center">
+        <div id="with" className="xl:w-1/2 sm:w-[640px] items-center h-full">
             <div className='bg-green-300 p-3 flex flex-col w-full sm:w-[640px] xl:w-full border-8 border-green-800 rounded-xl'>
                 <div className="flex items-center text-2xl space-x-2">
                     <ImCheckmark className="fill-green-800"/>

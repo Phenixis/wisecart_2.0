@@ -4,7 +4,7 @@ import CTA from "@/components/ui/cta";
 
 export default function Header() {
     return (
-        <div className="navbar bg-base-100">
+        <div className="navbar bg-base-200 rounded-b-xl">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden focus:rotate-90">
