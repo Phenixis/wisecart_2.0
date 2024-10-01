@@ -18,7 +18,6 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
-  has_access: boolean('has_access').notNull().default(false),
 });
 
 export const teams = pgTable('teams', {

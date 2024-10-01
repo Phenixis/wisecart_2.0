@@ -26,7 +26,7 @@ export async function getUser() {
   const user = await db
     .select()
     .from(users)
-    .where(and(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)), users.has_access))
+    .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
     .limit(1);
 
   if (user.length === 0) {
