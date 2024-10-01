@@ -20,6 +20,9 @@ export async function createCheckoutSession({
 }) {
   const user = await getUser();
 
+  const prices = await Promise.resolve(getStripePrices());
+  const price = prices.find((price) => price.id === priceId);
+
   if (!team || !user) {
     redirect(`/sign-up?redirect=checkout&priceId=${priceId}`);
   }
@@ -39,7 +42,7 @@ export async function createCheckoutSession({
     client_reference_id: user.id.toString(),
     allow_promotion_codes: true,
     subscription_data: {
-      trial_period_days: 14,
+      trial_period_days: price?.trialPeriodDays || 14,
     },
   });
 
