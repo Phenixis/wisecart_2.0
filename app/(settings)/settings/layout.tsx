@@ -31,7 +31,7 @@ export default function DashboardLayout({
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
           <Menu className="h-6 w-6" />
-          <span className="sr-only">Toggle sidebar</span>
+          <span className="sr-only">Open sidebar</span>
         </Button>
         <div className="flex items-center">
           <span className="font-medium">Settings</span>
@@ -49,12 +49,12 @@ export default function DashboardLayout({
         >
           <nav className="h-full overflow-y-auto p-4">
             <Button
-              className="-mr-3"
+              className="-mr-3 lg:hidden"
               variant="ghost"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
               <X className="h-6 w-6" />
-              <span className="sr-only">Toggle sidebar</span>
+              <span className="sr-only">Close sidebar</span>
             </Button>
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} passHref>
