@@ -7,6 +7,6 @@ export default async function SettingsPage() {
   if (!user) {
     redirect('/sign-in');
   } else {
-    redirect('/dashboard/general');
+    redirect('/settings/general');
   }
 }

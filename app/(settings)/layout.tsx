@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Home, LogOut } from 'lucide-react';
+import { Settings, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,9 +56,9 @@ function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="p-0">
                 <DropdownMenuItem className="w-full cursor-pointer m-1">
-                  <Link href="/dashboard" className="flex w-full items-center">
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
+                  <Link href="/settings" className="flex w-full items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <form action={handleSignOut} className="p-1">
