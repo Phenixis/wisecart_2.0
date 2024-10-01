@@ -127,3 +127,13 @@ export async function getTeamForUser(userId: number) {
 
   return result?.teamMembers[0]?.team || null;
 }
+
+export async function getTeamSubscriptionStatus(userId: number) {
+  const team = await getTeamForUser(userId);
+  
+  if (!team) {
+    return null;
+  }
+
+  return team.subscriptionStatus;
+}
