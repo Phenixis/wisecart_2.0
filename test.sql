@@ -30,20 +30,17 @@ SELECT * FROM "shopping_lists_meals";
 
 -- List ingredients for each shopping list with the sum of their required quantities
 SELECT 
-	sl.name AS shopping_list_name,
-	i.name AS ingredient_name,
-	SUM(slm.quantity * mi.quantity_per_person) AS total_quantity,
-	mi.unit
-FROM 
-	shopping_lists sl
-JOIN 
-	shopping_lists_meals slm ON sl.id = slm.shopping_list_id
-JOIN 
-	meals_ingredients mi ON slm.meal_id = mi.meal_id
-JOIN 
-	ingredients i ON mi.ingredient_id = i.id
-GROUP BY 
-	sl.name, i.name, mi.unit;
+sl.name AS "Shopping List",
+i.name AS "Ingredient",
+SUM(mi.quantity_per_person * m.nb_persons * slm.quantity) AS "Total Quantity",
+mi.unit
+FROM shopping_lists sl
+JOIN shopping_lists_meals slm ON sl.id = slm.shopping_list_id
+JOIN meals m ON slm.meal_id = m.id
+JOIN meals_ingredients mi ON m.id = mi.meal_id
+JOIN ingredients i ON mi.ingredient_id = i.id
+GROUP BY sl.name, i.name, mi.unit
+ORDER BY sl.name, i.name;
 
 -- Truncate the tables to remove all data
 TRUNCATE TABLE "ingredients" RESTART IDENTITY CASCADE;
