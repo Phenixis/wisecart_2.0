@@ -1,6 +1,16 @@
-import { desc, and, eq, isNull } from 'drizzle-orm';
+import { desc, and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { activityLogs, teamMembers, teams, users } from './schema';
+import { 
+  activityLogs,
+  teamMembers,
+  teams,
+  users,
+  meals,
+  shoppingLists,
+  shoppingListsMeals,
+  mealsIngredients,
+  ingredients
+} from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
 
@@ -100,6 +110,12 @@ export async function getActivityLogs() {
 }
 
 export async function getTeamForUser(userId: number) {
+/**
+ * Retrieves the team associated with a given user.
+ *
+ * @param userId - The ID of the user for whom the team is being retrieved.
+ * @returns A promise that resolves to the team object if found, or null if no team is associated with the user.
+*/
   const result = await db.query.users.findFirst({
     where: eq(users.id, userId),
     with: {
@@ -136,4 +152,21 @@ export async function getTeamSubscriptionStatus(userId: number) {
   }
 
   return team.subscriptionStatus;
+}
+
+export async function getShoppingListIngredients() {
+  return await db
+    .select({
+      'Shopping List': shoppingLists.name,
+      'Ingredient': ingredients.name,
+      'Total Quantity': sql`SUM(mi.quantity_per_person * m.nb_persons * slm.quantity)`,
+      'Unit': mealsIngredients.unit,
+    })
+    .from(shoppingLists)
+    .innerJoin(shoppingListsMeals, eq(shoppingLists.id, shoppingListsMeals.shoppingListId))
+    .innerJoin(meals, eq(shoppingListsMeals.mealId, meals.id))
+    .innerJoin(mealsIngredients, eq(meals.id, mealsIngredients.mealId))
+    .innerJoin(ingredients, eq(mealsIngredients.ingredientId, ingredients.id))
+    .groupBy(shoppingLists.name, ingredients.name, mealsIngredients.unit)
+    .orderBy(shoppingLists.name, ingredients.name);
 }
