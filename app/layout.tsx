@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: '%s | Wisecart',
     default: 'Home',
   },
-  description: 'Get started quickly with Next.js, Postgres, and Stripe.',
+  description: 'Create your shopping list and save hours by using Wisecart',
 };
 
 export const viewport: Viewport = {
