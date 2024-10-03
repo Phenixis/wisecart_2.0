@@ -38,6 +38,14 @@ export function validatedActionWithUser<S extends z.ZodType<any, any>, T>(
   schema: S,
   action: ValidatedActionWithUserFunction<S, T>
 ) {
+  /*
+    This function validates the form data against the provided schema and ensures the user is authenticated.
+    If the validation fails, it returns an error message. If the user is not authenticated, it throws an error.
+    Otherwise, it executes the provided action with the validated data, form data, and user.
+    
+    This function should be used when you need to validate form data and ensure the user is authenticated before performing an action.
+    It combines form validation and user authentication in a single step, reducing boilerplate code and potential errors.
+  */
   return async (prevState: ActionState, formData: FormData): Promise<T> => {
     const user = await getUser();
     if (!user) {
