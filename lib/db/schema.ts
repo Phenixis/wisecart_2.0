@@ -5,7 +5,6 @@ import {
   text,
   timestamp,
   integer,
-  boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -69,15 +68,89 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
+export const meals = pgTable('meals', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  nbPersons: integer('nb_persons').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
+  createdBy: integer('created_by')
+    .notNull()
+    .references(() => users.id),
+  teamId: integer('team_id')
+    .notNull()
+    .references(() => teams.id),
+});
+
+export const ingredients = pgTable('ingredients', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
+  createdBy: integer('created_by')
+    .notNull()
+    .references(() => users.id),
+  teamId: integer('team_id')
+    .notNull()
+    .references(() => teams.id),
+});
+
+export const shoppingLists = pgTable('shopping_lists', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
+  completedAt: timestamp('completed_at'),
+  createdBy: integer('created_by')
+    .notNull()
+    .references(() => users.id),
+  teamId: integer('team_id')
+    .notNull()
+    .references(() => teams.id),
+});
+
+export const mealsIngredients = pgTable('meals_ingredients', {
+  id: serial('id').primaryKey(),
+  mealId: integer('meal_id')
+    .notNull()
+    .references(() => meals.id),
+  ingredientId: integer('ingredient_id')
+    .notNull()
+    .references(() => ingredients.id),
+  quantity_per_person: integer('quantity_per_person').notNull(),
+  unit: varchar('unit', { length: 50 }).notNull(),
+});
+
+export const shoppingListsMeals = pgTable('shopping_lists_meals', {
+  id: serial('id').primaryKey(),
+  shoppingListId: integer('shopping_list_id')
+    .notNull()
+    .references(() => shoppingLists.id),
+  mealId: integer('meal_id')
+    .notNull()
+    .references(() => meals.id),
+  quantity: integer('quantity').notNull(),
+});
+
 export const teamsRelations = relations(teams, ({ many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
   invitations: many(invitations),
+  meals: many(meals),
+  ingredients: many(ingredients),
+  shoppingLists: many(shoppingLists),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  meals: many(meals),
+  ingredients: many(ingredients),
+  shoppingLists: many(shoppingLists),
 }));
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
@@ -113,6 +186,42 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+export const mealsRelations = relations(meals, ({ many }) => ({
+  ingredients: many(mealsIngredients),
+  shoppingLists: many(shoppingListsMeals),
+
+}));
+
+export const ingredientsRelations = relations(ingredients, ({ many }) => ({
+  meals: many(mealsIngredients),
+}));
+
+export const mealsIngredientsRelations = relations(mealsIngredients, ({ one }) => ({
+  meal: one(meals, {
+    fields: [mealsIngredients.mealId],
+    references: [meals.id],
+  }),
+  ingredient: one(ingredients, {
+    fields: [mealsIngredients.ingredientId],
+    references: [ingredients.id],
+  }),
+}));
+
+export const shoppingListsRelations = relations(shoppingLists, ({ many }) => ({
+  meals: many(shoppingListsMeals),
+}));
+
+export const shoppingListsMealsRelations = relations(shoppingListsMeals, ({ one }) => ({
+  shoppingList: one(shoppingLists, {
+    fields: [shoppingListsMeals.shoppingListId],
+    references: [shoppingLists.id],
+  }),
+  meal: one(meals, {
+    fields: [shoppingListsMeals.mealId],
+    references: [meals.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -128,6 +237,16 @@ export type TeamDataWithMembers = Team & {
     user: Pick<User, 'id' | 'name' | 'email'>;
   })[];
 };
+export type Ingredient = typeof ingredients.$inferSelect;
+export type NewIngredient = typeof ingredients.$inferInsert;
+export type Meal = typeof meals.$inferSelect;
+export type NewMeal = typeof meals.$inferInsert;
+export type MealIngredient = typeof mealsIngredients.$inferSelect;
+export type NewMealIngredient = typeof mealsIngredients.$inferInsert;
+export type ShoppingList = typeof shoppingLists.$inferSelect;
+export type NewShoppingList = typeof shoppingLists.$inferInsert;
+export type ShoppingListMeal = typeof shoppingListsMeals.$inferSelect;
+export type NewShoppingListMeal = typeof shoppingListsMeals.$inferInsert;
 
 export enum ActivityType {
   SIGN_UP = 'SIGN_UP',
@@ -140,4 +259,18 @@ export enum ActivityType {
   REMOVE_TEAM_MEMBER = 'REMOVE_TEAM_MEMBER',
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
+  CREATE_INGREDIENT = 'CREATE_INGREDIENT',
+  UPDATE_INGREDIENT = 'UPDATE_INGREDIENT',
+  DELETE_INGREDIENT = 'DELETE_INGREDIENT',
+  CREATE_MEAL = 'CREATE_MEAL',
+  UPDATE_MEAL = 'UPDATE_MEAL',
+  DELETE_MEAL = 'DELETE_MEAL',
+  CREATE_SHOPPING_LIST = 'CREATE_SHOPPING_LIST',
+  UPDATE_SHOPPING_LIST = 'UPDATE_SHOPPING_LIST',
+  ADDED_MEAL_TO_SHOPPING_LIST = 'ADDED_MEAL_TO_SHOPPING_LIST',
+  REMOVED_MEAL_FROM_SHOPPING_LIST = 'REMOVED_MEAL_FROM_SHOPPING_LIST',
+  COMPLETE_SHOPPING_LIST = 'COMPLETE_SHOPPING_LIST',
+  UNCOMPLETE_SHOPPING_LIST = 'UNCOMPLETE_SHOPPING_LIST',
+  DELETE_SHOPPING_LIST = 'DELETE_SHOPPING_LIST',
+  EXPORTED_SHOPPING_LIST = 'EXPORTED_SHOPPING_LIST',
 }
