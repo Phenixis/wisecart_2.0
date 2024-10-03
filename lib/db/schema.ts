@@ -132,8 +132,7 @@ export const shoppingListsMeals = pgTable('shopping_lists_meals', {
     .references(() => shoppingLists.id),
   mealId: integer('meal_id')
     .notNull()
-    .references(() => meals.id),
-  quantity: integer('quantity').notNull(),
+    .references(() => meals.id)
 });
 
 export const teamsRelations = relations(teams, ({ many }) => ({
@@ -264,6 +263,7 @@ export enum ActivityType {
   DELETE_INGREDIENT = 'DELETE_INGREDIENT',
   CREATE_MEAL = 'CREATE_MEAL',
   UPDATE_MEAL = 'UPDATE_MEAL',
+  ADDED_INGREDIENT_TO_MEAL = 'ADDED_INGREDIENT_TO_MEAL',
   DELETE_MEAL = 'DELETE_MEAL',
   CREATE_SHOPPING_LIST = 'CREATE_SHOPPING_LIST',
   UPDATE_SHOPPING_LIST = 'UPDATE_SHOPPING_LIST',

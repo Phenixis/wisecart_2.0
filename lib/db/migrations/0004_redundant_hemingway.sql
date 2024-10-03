@@ -1,0 +1,1 @@
+ALTER TABLE "shopping_lists_meals" DROP COLUMN IF EXISTS "quantity";
