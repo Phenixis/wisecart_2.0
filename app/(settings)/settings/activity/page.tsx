@@ -100,6 +100,46 @@ function formatAction(action: ActivityType): string {
       return 'You invited a team member';
     case ActivityType.ACCEPT_INVITATION:
       return 'You accepted an invitation';
+    case ActivityType.CREATE_INGREDIENT:
+      return 'You created a new ingredient';
+    case ActivityType.UPDATE_INGREDIENT:
+      return 'You updated an ingredient';
+    case ActivityType.DELETE_INGREDIENT:
+      return 'You deleted an ingredient';
+    case ActivityType.CREATE_MEAL:
+      return 'You created a new meal';
+    case ActivityType.UPDATE_MEAL:
+      return 'You updated a meal';
+    case ActivityType.ADDED_INGREDIENT_TO_MEAL:
+      return 'You added an ingredient to a meal';
+    case ActivityType.REMOVED_INGREDIENT_FROM_MEAL:
+      return 'You removed an ingredient from a meal';
+    case ActivityType.DELETE_MEAL:
+      return 'You deleted a meal';
+    case ActivityType.CREATE_SHOPPING_LIST:
+      return 'You created a new shopping list';
+    case ActivityType.UPDATE_SHOPPING_LIST:
+      return 'You updated a shopping list';
+    case ActivityType.ADDED_MEAL_TO_SHOPPING_LIST:
+      return 'You added a meal to a shopping list';
+    case ActivityType.REMOVED_ONE_INSTANCE_OF_ONE_MEAL_FROM_SHOPPING_LIST:
+      return 'You removed one instance of one meal from a shopping list';
+    case ActivityType.REMOVED_ALL_INSTANCES_OF_ONE_MEAL_FROM_SHOPPING_LIST:
+      return 'You removed all instances of one meal from a shopping list';
+    case ActivityType.REMOVED_ALL_MEALS_FROM_SHOPPING_LIST:
+      return 'You removed all meals from a shopping list';
+    case ActivityType.COMPLETE_SHOPPING_LIST:
+      return 'You completed a shopping list';
+    case ActivityType.UNCOMPLETE_SHOPPING_LIST:
+      return 'You uncompleted a shopping list';
+    case ActivityType.DELETE_SHOPPING_LIST:
+      return 'You deleted a shopping list';
+    case ActivityType.EXPORTED_SHOPPING_LIST_AS_CSV:
+      return 'You exported a shopping list as CSV';
+    case ActivityType.EXPORTED_SHOPPING_LIST_AS_MARKDOWN:
+      return 'You exported a shopping list as Markdown';
+    case ActivityType.EXPORTED_SHOPPING_LIST_AS_TEXT:
+      return 'You exported a shopping list as text';
     default:
       return 'Unknown action occurred';
   }
