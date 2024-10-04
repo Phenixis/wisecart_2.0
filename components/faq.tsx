@@ -50,6 +50,7 @@ export default function FAQ() {
                         </p>
                     </div>
                 </div>
+                <Question props={{question:"Who is WiseCart for ?", answer:"WiseCart is for anyone who wants to save time on their groceries. It's especially useful for people who eat the same meals regularly and want to automate their shopping list."}} />
             </div>
         </div>
     )
