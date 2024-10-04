@@ -1,0 +1,659 @@
+'use server';
+
+import { z } from 'zod';
+import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { db } from '@/lib/db/drizzle';
+import {
+    meals,
+    ingredients,
+    mealsIngredients,
+    shoppingLists,
+    shoppingListsMeals,
+    User,
+    ActivityType,
+    type NewMeal,
+    type NewIngredient,
+    type NewShoppingList,
+} from '@/lib/db/schema';
+import {
+    validatedAction,
+    validatedActionWithUser,
+} from '@/lib/auth/middleware';
+import {
+    getTeamForUser,
+    getShoppingListIngredients
+} from '@/lib/db/queries';
+import {
+    logActivity
+} from '@/lib/actions/actions';
+
+// INGREDIENTS - CRUD
+
+// Create an ingredient
+const createIngredientSchema = z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+});
+
+export const createIngredient = validatedActionWithUser(
+    createIngredientSchema,
+    async (data: z.infer<typeof createIngredientSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newIngredients: NewIngredient = {
+            ...data,
+            createdBy: user.id,
+            teamId: team.id,
+        };
+
+        await Promise.all([
+            db.insert(ingredients).values(newIngredients),
+            logActivity(team.id, user.id, ActivityType.CREATE_INGREDIENT),
+        ]);
+    },
+);
+
+// Read the list of ingredients
+
+const getIngredientsSchema = z.object({});
+
+export const getIngredients = validatedActionWithUser(
+    getIngredientsSchema,
+    async (_, __, user: User) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        return db
+            .select({
+                id: ingredients.id,
+                name: ingredients.name,
+                createdBy: ingredients.createdBy,
+                teamId: ingredients.teamId,
+                createdAt: ingredients.createdAt,
+            })
+            .from(ingredients)
+            .where(
+                and(
+                    eq(ingredients.teamId, team.id),
+                    isNotNull(ingredients.deletedAt),
+                ),
+            );
+    },
+);
+
+// Update an ingredient
+
+const updateIngredientSchema = z.object({
+    id: z.number(),
+    name: z.string().min(1),
+    description: z.string().optional(),
+});
+
+export const updateIngredient = validatedActionWithUser(
+    updateIngredientSchema,
+    async (data: z.infer<typeof updateIngredientSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newIngredients: NewIngredient = {
+            ...data,
+            createdBy: user.id,
+            teamId: team.id,
+        };
+
+        await Promise.all([
+            db.update(ingredients).set(newIngredients).where(eq(ingredients.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.UPDATE_INGREDIENT),
+        ]);
+    },
+);
+
+// Delete an ingredient
+
+const deleteIngredientSchema = z.object({
+    id: z.number(),
+});
+
+export const deleteIngredient = validatedActionWithUser(
+    deleteIngredientSchema,
+    async (data: z.infer<typeof deleteIngredientSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.update(ingredients).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(ingredients.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.DELETE_INGREDIENT),
+        ]);
+    },
+);
+
+// MEALS - CRUD
+
+// Create a meal
+
+const createMealSchema = z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+    nbPersons: z.number().int().positive(),
+    ingredients: z.array(createIngredientSchema),
+});
+
+export const createMeal = validatedActionWithUser(
+    createMealSchema,
+    async (data: z.infer<typeof createMealSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newMeal: NewMeal = {
+            ...data,
+            createdBy: user.id,
+            teamId: team.id,
+        };
+
+
+        await Promise.all([
+            db.insert(meals).values(newMeal),
+            logActivity(team.id, user.id, ActivityType.CREATE_MEAL),
+        ]);
+    },
+);
+
+// Read the list of meals
+
+const getMealsSchema = z.object({});
+
+export const getMeals = validatedActionWithUser(
+    getMealsSchema,
+    async (_, __, user: User) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        return db
+            .select({
+                id: meals.id,
+                name: meals.name,
+                createdBy: meals.createdBy,
+                teamId: meals.teamId,
+                createdAt: meals.createdAt,
+            })
+            .from(meals)
+            .where(
+                and(
+                    eq(meals.teamId, team.id),
+                    isNotNull(meals.deletedAt),
+                ),
+            );
+    },
+);
+
+// Update a meal
+
+const updateMealSchema = z.object({
+    id: z.number(),
+    name: z.string().min(1),
+    description: z.string().optional(),
+    nbPersons: z.number().int().positive(),
+});
+
+export const updateMeal = validatedActionWithUser(
+    updateMealSchema,
+    async (data: z.infer<typeof updateMealSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newMeal: NewMeal = {
+            ...data,
+            createdBy: user.id,
+            teamId: team.id,
+        };
+
+        await Promise.all([
+            db.update(meals).set(newMeal).where(eq(meals.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.UPDATE_MEAL),
+        ]);
+    },
+);
+
+// Add an ingredient to a meal
+
+const addIngredientToMealSchema = z.object({
+    mealId: z.number(),
+    ingredientId: z.number(),
+    quantity_per_person: z.number().int().positive(),
+    unit: z.string().min(1),
+    quantity: z.number().int().positive().default(1),
+});
+
+export const addIngredientToMeal = validatedActionWithUser(
+    addIngredientToMealSchema,
+    async (data: z.infer<typeof addIngredientToMealSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.insert(mealsIngredients).values(data),
+            logActivity(team.id, user.id, ActivityType.ADDED_INGREDIENT_TO_MEAL),
+        ]);
+    }
+);
+
+// Remove an ingredient from a meal
+
+const removeIngredientFromMealSchema = z.object({
+    mealId: z.number(),
+    ingredientId: z.number(),
+});
+
+export const removeIngredientFromMeal = validatedActionWithUser(
+    removeIngredientFromMealSchema,
+    async (data: z.infer<typeof removeIngredientFromMealSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const mealId = await db
+            .select({
+                id: mealsIngredients.id,
+            })
+            .from(mealsIngredients)
+            .where(
+                and(
+                    eq(mealsIngredients.mealId, data.mealId),
+                    eq(mealsIngredients.ingredientId, data.ingredientId),
+                ),
+            ).limit(1);
+
+        await Promise.all([
+            db
+            .delete(mealsIngredients)
+            .where(
+                eq(mealsIngredients.mealId, mealId[0].id),
+            ),
+            logActivity(team.id, user.id, ActivityType.REMOVED_INGREDIENT_FROM_MEAL),
+        ]);
+    }
+);
+
+// Delete a meal
+
+const deleteMealSchema = z.object({
+    id: z.number(),
+});
+
+export const deleteMeal = validatedActionWithUser(
+    deleteMealSchema,
+    async (data: z.infer<typeof deleteMealSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.update(meals).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(meals.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.DELETE_MEAL),
+        ]);
+    },
+);
+
+// SHOPPING LISTS - CRUD
+
+// Create a shopping list
+
+const createShoppingListSchema = z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+    meals: z.array(createMealSchema),
+});
+
+export const createShoppingList = validatedActionWithUser(
+    createShoppingListSchema,
+    async (data: z.infer<typeof createShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newShoppingList: NewShoppingList = {
+            ...data,
+            createdBy: user.id,
+            teamId: team.id,
+        };
+
+        await Promise.all([
+            db.insert(shoppingLists).values(newShoppingList),
+            logActivity(team.id, user.id, ActivityType.CREATE_SHOPPING_LIST),
+        ]);
+    },
+);
+
+// Read the list of shopping lists
+
+const getShoppingListsSchema = z.object({});
+
+export const getShoppingLists = validatedActionWithUser(
+    getShoppingListsSchema,
+    async (_, __, user: User) => {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
+
+    return db
+        .select({
+            id: shoppingLists.id,
+            name: shoppingLists.name,
+            createdBy: shoppingLists.createdBy,
+            teamId: shoppingLists.teamId,
+            createdAt: shoppingLists.createdAt,
+            completedAt: shoppingLists.completedAt,
+        })
+        .from(shoppingLists)
+        .where(
+            and(
+                eq(shoppingLists.teamId, team.id),
+                isNotNull(shoppingLists.deletedAt),
+            ),
+        );
+});
+
+// Get a shopping list as CSV
+
+const getShoppingListAsCsvSchema = z.object({
+    id: z.number(),
+});
+
+export const getShoppingListAsCsv = validatedActionWithUser(
+    getShoppingListAsCsvSchema,
+    async (data: z.infer<typeof getShoppingListAsCsvSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const ingredients = await getShoppingListIngredients(data.id);
+
+        if (ingredients) {
+            logActivity(team.id, user.id, ActivityType.EXPORTED_SHOPPING_LIST_AS_CSV);
+        } else {
+            throw new Error('No ingredients found for shopping list');
+        }
+
+        return ingredients.map((ingredient) => `${ingredient.Ingredient},${ingredient['Total Quantity']},${ingredient.Unit}`).join('\n');
+    }
+);
+
+// Get a shopping list as Markdown
+
+const getShoppingListAsMarkdownSchema = z.object({
+    id: z.number(),
+});
+
+export const getShoppingListAsMarkdown = validatedActionWithUser(
+    getShoppingListAsMarkdownSchema,
+    async (data: z.infer<typeof getShoppingListAsMarkdownSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const ingredients = await getShoppingListIngredients(data.id);
+
+        if (ingredients) {
+            logActivity(team.id, user.id, ActivityType.EXPORTED_SHOPPING_LIST_AS_MARKDOWN);
+        } else {
+            throw new Error('No ingredients found for shopping list');
+        }
+
+        return ingredients.map((ingredient) => `- [ ] ${ingredient.Ingredient} (${ingredient['Total Quantity']} ${ingredient.Unit})`).join('\n');
+    }
+);
+
+// Get a shopping list as text
+
+const getShoppingListAsTextSchema = z.object({
+    id: z.number(),
+});
+
+export const getShoppingListAsText = validatedActionWithUser(
+    getShoppingListAsTextSchema,
+    async (data: z.infer<typeof getShoppingListAsTextSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const ingredients = await getShoppingListIngredients(data.id);
+
+        if (ingredients) {
+            logActivity(team.id, user.id, ActivityType.EXPORTED_SHOPPING_LIST_AS_TEXT);
+        } else {
+            throw new Error('No ingredients found for shopping list');
+        }
+
+        return ingredients.map((ingredient) => `- ${ingredient.Ingredient} (${ingredient['Total Quantity']} ${ingredient.Unit})`).join('\n');
+    }
+);
+
+// Update a shopping list
+
+const updateShoppingListSchema = z.object({
+    id: z.number(),
+    name: z.string().min(1),
+    description: z.string().optional(),
+});
+
+export const updateShoppingList = validatedActionWithUser(
+    updateShoppingListSchema,
+    async (data: z.infer<typeof updateShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newShoppingList: NewShoppingList = {
+            ...data,
+            createdBy: user.id,
+            teamId: team.id,
+        };
+
+        await Promise.all([
+            db.update(shoppingLists).set(newShoppingList).where(eq(shoppingLists.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.UPDATE_SHOPPING_LIST),
+        ]);
+    },
+);
+
+// Add a meal to a shopping list
+
+const addMealToShoppingListSchema = z.object({
+    shoppingListId: z.number(),
+    mealId: z.number()
+});
+
+export const addMealToShoppingList = validatedActionWithUser(
+    addMealToShoppingListSchema,
+    async (data: z.infer<typeof addMealToShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.insert(shoppingListsMeals).values(data),
+            logActivity(team.id, user.id, ActivityType.ADDED_MEAL_TO_SHOPPING_LIST),
+        ]);
+    }
+);
+
+// Remove a meal from a shopping list
+
+const removeOneInstanceOfOneMealFromShoppingListSchema = z.object({
+    shoppingListId: z.number(),
+    mealId: z.number(),
+});
+
+export const removeOneInstanceOfOneMealFromShoppingList = validatedActionWithUser(
+    removeOneInstanceOfOneMealFromShoppingListSchema,
+    async (data: z.infer<typeof removeOneInstanceOfOneMealFromShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const mealId = await db
+            .select({
+                id: shoppingListsMeals.id,
+            })
+            .from(shoppingListsMeals)
+            .where(
+                and(
+                    eq(shoppingListsMeals.shoppingListId, data.shoppingListId),
+                    eq(shoppingListsMeals.mealId, data.mealId),
+                ),
+            ).limit(1);
+
+        await Promise.all([
+            db
+            .delete(shoppingListsMeals)
+            .where(
+                eq(shoppingListsMeals.shoppingListId, mealId[0].id),
+            ),
+            logActivity(team.id, user.id, ActivityType.REMOVED_ONE_INSTANCE_OF_ONE_MEAL_FROM_SHOPPING_LIST),
+        ]);
+    }
+);
+
+// Remove all instances of one meal from a shopping list
+
+const removeAllInstanceOfOneMealFromShoppingListSchema = z.object({
+    shoppingListId: z.number(),
+    mealId: z.number(),
+});
+
+export const removeAllInstanceOfOneMealFromShoppingList = validatedActionWithUser(
+    removeAllInstanceOfOneMealFromShoppingListSchema,
+    async (data: z.infer<typeof removeAllInstanceOfOneMealFromShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db
+            .delete(shoppingListsMeals)
+            .where(
+                and(
+                    eq(shoppingListsMeals.shoppingListId, data.shoppingListId),
+                    eq(shoppingListsMeals.mealId, data.mealId),
+                ),
+            ),
+            logActivity(team.id, user.id, ActivityType.REMOVED_ALL_INSTANCES_OF_ONE_MEAL_FROM_SHOPPING_LIST),
+        ]);
+    }
+);
+
+// Remove all meals from a shopping list
+
+const removeAllMealsFromShoppingListSchema = z.object({
+    shoppingListId: z.number(),
+});
+
+export const removeAllMealsFromShoppingList = validatedActionWithUser(
+    removeAllMealsFromShoppingListSchema,
+    async (data: z.infer<typeof removeAllMealsFromShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db
+            .delete(shoppingListsMeals)
+            .where(
+                eq(shoppingListsMeals.shoppingListId, data.shoppingListId),
+            ),
+            logActivity(team.id, user.id, ActivityType.REMOVED_ALL_MEALS_FROM_SHOPPING_LIST),
+        ]);
+    }
+);
+
+// Complete a shopping list
+
+const completeShoppingListSchema = z.object({
+    id: z.number(),
+});
+
+export const completeShoppingList = validatedActionWithUser(
+    completeShoppingListSchema,
+    async (data: z.infer<typeof completeShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.update(shoppingLists).set({completedAt: sql`CURRENT_TIMESTAMP`}).where(eq(shoppingLists.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.COMPLETE_SHOPPING_LIST),
+        ]);
+    },
+);
+
+// Uncomplete a shopping list
+
+const uncompleteShoppingListSchema = z.object({
+    id: z.number(),
+});
+
+export const uncompleteShoppingList = validatedActionWithUser(
+    uncompleteShoppingListSchema,
+    async (data: z.infer<typeof uncompleteShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.update(shoppingLists).set({completedAt: null}).where(eq(shoppingLists.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.UNCOMPLETE_SHOPPING_LIST),
+        ]);
+    },
+);
+
+// Delete a shopping list
+
+const deleteShoppingListSchema = z.object({
+    id: z.number(),
+});
+
+export const deleteShoppingList = validatedActionWithUser(
+    deleteShoppingListSchema,
+    async (data: z.infer<typeof deleteShoppingListSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        await Promise.all([
+            db.update(shoppingLists).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(shoppingLists.id, data.id)),
+            logActivity(team.id, user.id, ActivityType.DELETE_SHOPPING_LIST),
+        ]);
+    },
+);
