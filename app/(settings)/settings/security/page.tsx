@@ -106,7 +106,7 @@ export default function SecurityPage() {
             )}
             <Button
               type="submit"
-              className="bg-primary hover:bg-green-600 text-white rounded-xl"
+              className="bg-primary hover:bg-green-600 text-white rounded-xl font-bold"
               disabled={isPasswordPending}
             >
               {isPasswordPending ? (
@@ -152,7 +152,7 @@ export default function SecurityPage() {
             <Button
               type="submit"
               variant="destructive"
-              className="bg-red-600 hover:bg-red-700 rounded-xl"
+              className="bg-red-600 hover:bg-red-700 rounded-xl font-bold"
               disabled={isDeletePending}
             >
               {isDeletePending ? (
