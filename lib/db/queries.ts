@@ -154,10 +154,13 @@ export async function getTeamSubscriptionStatus(userId: number) {
   return team.subscriptionStatus;
 }
 
-export async function getShoppingListIngredients() {
+
+/*
+rewrite the function getShoppingListIngredients to work for one shopping list at a time
+*/
+export async function getShoppingListIngredients(shoppingListId: number) {
   return await db
     .select({
-      'Shopping List': shoppingLists.name,
       'Ingredient': ingredients.name,
       'Total Quantity': sql`SUM(mi.quantity_per_person * m.nb_persons * slm.quantity)`,
       'Unit': mealsIngredients.unit,
@@ -167,6 +170,7 @@ export async function getShoppingListIngredients() {
     .innerJoin(meals, eq(shoppingListsMeals.mealId, meals.id))
     .innerJoin(mealsIngredients, eq(meals.id, mealsIngredients.mealId))
     .innerJoin(ingredients, eq(mealsIngredients.ingredientId, ingredients.id))
-    .groupBy(shoppingLists.name, ingredients.name, mealsIngredients.unit)
-    .orderBy(shoppingLists.name, ingredients.name);
+    .where(eq(shoppingLists.id, shoppingListId))
+    .groupBy(ingredients.name, mealsIngredients.unit)
+    .orderBy(ingredients.name);
 }
