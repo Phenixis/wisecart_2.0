@@ -154,10 +154,6 @@ export async function getTeamSubscriptionStatus(userId: number) {
   return team.subscriptionStatus;
 }
 
-
-/*
-rewrite the function getShoppingListIngredients to work for one shopping list at a time
-*/
 export async function getShoppingListIngredients(shoppingListId: number) {
   return await db
     .select({
