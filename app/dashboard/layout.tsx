@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import {Menu, X, Home, ShoppingCart, CookingPot, Salad } from 'lucide-react';
 
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -35,7 +35,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
             <span className="sr-only">Open sidebar</span>
           </Button>
           <div className="flex items-center">
-            <span className="font-medium">Settings</span>
+            <span className="font-medium">Menu</span>
           </div>
         </div>
 
