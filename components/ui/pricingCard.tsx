@@ -2,7 +2,7 @@ import { checkoutAction } from '@/lib/payments/actions';
 import { Check } from 'lucide-react';
 import { SubmitButton } from './submit-button';
 import { Suspense } from "react";
-import PricingCardSkeleton from "./skeletons/pricingCardSkeleton";
+import PricingCardSkeleton from "./../skeletons/pricingCardSkeleton";
 
 export default function PricingCard({
     name,
