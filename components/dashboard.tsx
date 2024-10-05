@@ -1,19 +1,23 @@
+import ShoppingLists from './shoppingLists';
+import MealList from './mealLists';
+import IngredientLists from './ingredientLists';
+
 export default function Dashboard() {
     return (
-        <div className="p-5">
+        <div className="p-6 spacing-y-4">
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <div className="flex justify-around mt-5">
-                <div className="w-1/3 p-2 border border-gray-300 rounded">
-                    <h2 className="text-xl font-semibold">Section 1</h2>
-                    <p>Content for section 1</p>
+            <h2 className="text-xl font-bold">Last Shopping List :</h2>
+            <div className="w-full flex justify-center">
+                <ShoppingLists />
+            </div>
+            <div className="flex">
+                <div className="w-1/2">
+                    <h2 className="text-xl font-bold">Meal Lists</h2>
+                    <MealList />
                 </div>
-                <div className="w-1/3 p-2 border border-gray-300 rounded">
-                    <h2 className="text-xl font-semibold">Section 2</h2>
-                    <p>Content for section 2</p>
-                </div>
-                <div className="w-1/3 p-2 border border-gray-300 rounded">
-                    <h2 className="text-xl font-semibold">Section 3</h2>
-                    <p>Content for section 3</p>
+                <div className="w-1/2">
+                    <h2 className="text-xl font-bold">Ingredient Lists</h2>
+                    <IngredientLists />
                 </div>
             </div>
         </div>
