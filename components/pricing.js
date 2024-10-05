@@ -1,6 +1,5 @@
 import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe';
-import PricingCard from "./pricingCard";
-import PricingCardSkeleton from './skeletons/pricingCardSkeleton';
+import PricingCard from "./ui/pricingCard";
 
 // Prices are fresh for one hour max
 export const revalidate = 3600;
