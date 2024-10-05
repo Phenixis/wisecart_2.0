@@ -66,7 +66,8 @@ const config: Config = {
       {
         light: {
           ...require("daisyui/src/theming/themes")["emerald"],
-          primary: "#36c32c",
+          "primary": "#36c32c",
+          "base-100":  "#fafafa"
         },
       },
     ],
