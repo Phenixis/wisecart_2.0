@@ -65,7 +65,7 @@ export default function Header() {
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="p-0">
+              <DropdownMenuContent align="end" className="p-0 backdrop-blur-sm">
                 <DropdownMenuItem className="w-full cursor-pointer m-1">
                   <Link href="/dashboard" className="flex w-full items-center">
                     <Home className="mr-2 h-4 w-4" />
