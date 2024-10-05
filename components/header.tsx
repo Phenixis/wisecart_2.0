@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Home } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,26 +35,43 @@ export default function Header() {
           <span className="ml-2 text-xl font-semibold text-gray-900">WiseCart</span>
         </Link>
         <div className="flex items-center space-x-4">
-          <Link
-            href="/pricing"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Pricing
-          </Link>
+          { !user ? (
+            <Link
+              href="/pricing"
+              className="text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Pricing
+            </Link>
+            )
+            : null 
+          }
           {user ? (
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer size-9">
                   <AvatarImage alt={user.name || ''} />
                   <AvatarFallback>
-                    {user.email
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
+                    { user.name ? (
+                        user.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join(''))
+                      : (
+                        user.email
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join(''))
+                    }
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="p-0">
+                <DropdownMenuItem className="w-full cursor-pointer m-1">
+                  <Link href="/dashboard" className="flex w-full items-center">
+                    <Home className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem className="w-full cursor-pointer m-1">
                   <Link href="/settings" className="flex w-full items-center">
                     <Settings className="mr-2 h-4 w-4" />
