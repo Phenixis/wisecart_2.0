@@ -2,7 +2,7 @@
 
 import Logo from '@/components/ui/logo';
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { startTransition, useActionState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,12 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
     { error: '' }
   );
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    startTransition(() => {
+      formAction(new FormData(event.currentTarget));
+  });
+
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-base-100">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -37,7 +43,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <form className="space-y-6" action={formAction}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <input type="hidden" name="redirect" value={redirect || ''} />
           <input type="hidden" name="priceId" value={priceId || ''} />
           <input type="hidden" name="inviteId" value={inviteId || ''} />
@@ -140,4 +146,4 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </div>
     </div>
   );
-}
+}}
