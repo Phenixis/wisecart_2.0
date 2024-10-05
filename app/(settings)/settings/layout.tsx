@@ -34,7 +34,7 @@ export default function DashboardLayout({
           <span className="sr-only">Open sidebar</span>
         </Button>
         <div className="flex items-center">
-          <span className="font-medium">Settings</span>
+          <span className="font-medium">Menu</span>
         </div>
       </div>
 
