@@ -46,6 +46,14 @@ export async function getUser() {
   return user[0];
 }
 
+export async function getUserWithId(userId: number) {
+  return await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+}
+
 export async function getTeamByStripeCustomerId(customerId: string) {
   const result = await db
     .select()
