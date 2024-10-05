@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getUser, getTeamSubscriptionStatus } from "@/lib/db/queries";
-import Dashboard from "@/components/dashboard";
-import Redirection from "@/components/redirection";
+import MealList from "@/components/mealLists";
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -15,6 +14,6 @@ export default async function DashboardPage() {
     }
     
     return (
-        <Dashboard />
+        <MealList />
     );
 };
