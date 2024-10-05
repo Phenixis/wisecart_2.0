@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/drizzle';
 import {
     meals,
@@ -58,33 +58,86 @@ export const createIngredient = validatedActionWithUser(
 
 // Read the list of ingredients
 
-const getIngredientsSchema = z.object({});
+export async function getAllIngredients(user: User) {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
 
-export const getIngredients = validatedActionWithUser(
-    getIngredientsSchema,
-    async (_, __, user: User) => {
-        const team = await getTeamForUser(user.id);
-        if (!team) {
-            throw new Error('User does not belong to a team');
-        }
+    return db
+        .select({
+            id: ingredients.id,
+            name: ingredients.name,
+            createdBy: ingredients.createdBy,
+            teamId: ingredients.teamId,
+            createdAt: ingredients.createdAt,
+        })
+        .from(ingredients)
+        .where(
+            and(
+                eq(ingredients.teamId, team.id),
+                isNotNull(ingredients.deletedAt),
+            ),
+        );
+};
 
-        return db
-            .select({
-                id: ingredients.id,
-                name: ingredients.name,
-                createdBy: ingredients.createdBy,
-                teamId: ingredients.teamId,
-                createdAt: ingredients.createdAt,
-            })
-            .from(ingredients)
-            .where(
-                and(
-                    eq(ingredients.teamId, team.id),
-                    isNotNull(ingredients.deletedAt),
-                ),
-            );
-    },
-);
+export async function getIngredientsOfMeal(user: User, mealId: number) {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
+
+    return db
+        .select({
+            id: ingredients.id,
+            name: ingredients.name,
+            createdBy: ingredients.createdBy,
+            teamId: ingredients.teamId,
+            createdAt: ingredients.createdAt,
+            updatedAt: ingredients.updatedAt,
+            deletedAt: ingredients.deletedAt,
+            unit: mealsIngredients.unit,
+            quantity: sql`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
+        })
+        .from(ingredients)
+        .innerJoin(mealsIngredients, eq(ingredients.id, mealsIngredients.ingredientId))
+        .innerJoin(meals, eq(mealsIngredients.mealId, meals.id))
+        .where(
+            and(
+                eq(ingredients.teamId, team.id),
+                isNull(ingredients.deletedAt),
+                eq(mealsIngredients.mealId, mealId),
+            ),
+        )
+        .groupBy(
+            ingredients.id,
+            mealsIngredients.unit
+        );
+
+    // return db
+    //     .select({
+    //         id: ingredients.id,
+    //         name: ingredients.name,
+    //         createdBy: ingredients.createdBy,
+    //         teamId: ingredients.teamId,
+    //         createdAt: ingredients.createdAt,
+    //         updatedAt: ingredients.updatedAt,
+    //         deletedAt: ingredients.deletedAt,
+    //         quantity: sql`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
+    //         unit: mealsIngredients.unit,
+    //     })
+    //     .from(ingredients)
+    //     .innerJoin(mealsIngredients, eq(ingredients.id, mealsIngredients.ingredientId))
+    //     .innerJoin(meals, eq(mealsIngredients.mealId, meals.id))
+    //     .where(
+    //         and(
+    //             eq(ingredients.teamId, team.id),
+    //             isNull(ingredients.deletedAt),
+    //             eq(mealsIngredients.mealId, mealId),
+    //         ),
+    //     )
+    //     .groupBy(ingredients.id, mealsIngredients.id, meals.id);
+};
 
 // Update an ingredient
 
@@ -171,33 +224,57 @@ export const createMeal = validatedActionWithUser(
 
 // Read the list of meals
 
-const getMealsSchema = z.object({});
+export async function getAllMeals(user: User) {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
 
-export const getMeals = validatedActionWithUser(
-    getMealsSchema,
-    async (_, __, user: User) => {
-        const team = await getTeamForUser(user.id);
-        if (!team) {
-            throw new Error('User does not belong to a team');
-        }
+    return db
+        .select({
+            id: meals.id,
+            name: meals.name,
+            createdBy: meals.createdBy,
+            teamId: meals.teamId,
+            createdAt: meals.createdAt,
+        })
+        .from(meals)
+        .where(
+            and(
+                eq(meals.teamId, team.id),
+                isNotNull(meals.deletedAt),
+            ),
+        );
+};
 
-        return db
-            .select({
-                id: meals.id,
-                name: meals.name,
-                createdBy: meals.createdBy,
-                teamId: meals.teamId,
-                createdAt: meals.createdAt,
-            })
-            .from(meals)
-            .where(
-                and(
-                    eq(meals.teamId, team.id),
-                    isNotNull(meals.deletedAt),
-                ),
-            );
-    },
-);
+export async function getMealsOfShoppingList(user: User, shoppingListId: number) {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
+
+    return db
+        .select({
+            id: meals.id,
+            name: meals.name,
+            description: meals.description,
+            nbPersons: meals.nbPersons,
+            createdBy: meals.createdBy,
+            teamId: meals.teamId,
+            createdAt: meals.createdAt,
+            updatedAt: meals.updatedAt,
+            deletedAt: meals.deletedAt,
+        })
+        .from(meals)
+        .innerJoin(shoppingListsMeals, eq(meals.id, shoppingListsMeals.mealId))
+        .where(
+            and(
+                eq(meals.teamId, team.id),
+                isNull(meals.deletedAt),
+                eq(shoppingListsMeals.shoppingListId, shoppingListId),
+            ),
+        );
+};
 
 // Update a meal
 
@@ -346,33 +423,58 @@ export const createShoppingList = validatedActionWithUser(
 
 // Read the list of shopping lists
 
-const getShoppingListsSchema = z.object({});
-
-export const getShoppingLists = validatedActionWithUser(
-    getShoppingListsSchema,
-    async (_, __, user: User) => {
+export async function getShoppingLists(user: User) {
     const team = await getTeamForUser(user.id);
     if (!team) {
         throw new Error('User does not belong to a team');
     }
-
+    
     return db
-        .select({
-            id: shoppingLists.id,
-            name: shoppingLists.name,
-            createdBy: shoppingLists.createdBy,
-            teamId: shoppingLists.teamId,
-            createdAt: shoppingLists.createdAt,
-            completedAt: shoppingLists.completedAt,
-        })
-        .from(shoppingLists)
-        .where(
-            and(
-                eq(shoppingLists.teamId, team.id),
-                isNotNull(shoppingLists.deletedAt),
-            ),
-        );
-});
+    .select({
+        id: shoppingLists.id,
+        name: shoppingLists.name,
+        createdBy: shoppingLists.createdBy,
+        teamId: shoppingLists.teamId,
+        createdAt: shoppingLists.createdAt,
+        updatedAt: shoppingLists.updatedAt,
+        deletedAt: shoppingLists.deletedAt,
+        completedAt: shoppingLists.completedAt,
+    })
+    .from(shoppingLists)
+    .where(
+        and(
+            eq(shoppingLists.teamId, team.id),
+            isNotNull(shoppingLists.deletedAt),
+        ),
+    ).orderBy(desc(shoppingLists.createdAt));
+};
+
+export async function getLastShoppingList(user: User) {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
+    
+    return db
+    .select({
+        id: shoppingLists.id,
+        name: shoppingLists.name,
+        createdBy: shoppingLists.createdBy,
+        teamId: shoppingLists.teamId,
+        createdAt: shoppingLists.createdAt,
+        updatedAt: shoppingLists.updatedAt,
+        deletedAt: shoppingLists.deletedAt,
+        completedAt: shoppingLists.completedAt,
+    })
+    .from(shoppingLists)
+    .where(
+        and(
+            eq(shoppingLists.teamId, team.id),
+            isNull(shoppingLists.deletedAt),
+        ),
+    ).orderBy(desc(shoppingLists.createdAt))
+    .limit(1);
+}
 
 // Get a shopping list as CSV
 
