@@ -1,25 +1,25 @@
 -- Insert sample data into the tables
-INSERT INTO "ingredients" ("name", "team_id") VALUES 
-('Tomato', 1), 
-('Cheese', 1), 
-('Lettuce', 1);
+INSERT INTO "ingredients" ("name", "team_id", "created_by") VALUES 
+('Tomato', 3, 3), 
+('Cheese', 3, 3), 
+('Lettuce', 3, 3);
 
-INSERT INTO "meals" ("name", "description", "nb_persons", "team_id") VALUES 
-('Salad', 'Fresh vegetable salad', 2, 1), 
-('Pizza', 'Cheese pizza', 4, 1);
+INSERT INTO "meals" ("name", "description", "nb_persons", "team_id", "created_by") VALUES 
+('Salad', 'Fresh vegetable salad', 2, 3, 3), 
+('Pizza', 'Cheese pizza', 4, 3, 3);
 
 INSERT INTO "meals_ingredients" ("meal_id", "ingredient_id", "quantity_per_person", "unit") VALUES 
-(1, 1, 2, 'pieces'), 
-(1, 3, 1, 'head'), 
-(2, 1, 3, 'pieces'), 
-(2, 2, 200, 'grams');
+(4, 8, 2, 'pieces'), 
+(4, 10, 1, 'head'), 
+(5, 8, 3, 'pieces'), 
+(5, 9, 200, 'grams');
 
-INSERT INTO "shopping_lists" ("name", "team_id") VALUES 
-('Weekly Groceries', 1);
+INSERT INTO "shopping_lists" ("name", "team_id", "created_by") VALUES 
+('Weekly Groceries', 3, 3);
 
-INSERT INTO "shopping_lists_meals" ("shopping_list_id", "meal_id", "quantity") VALUES 
-(1, 1, 2), 
-(1, 2, 1);
+INSERT INTO "shopping_lists_meals" ("shopping_list_id", "meal_id") VALUES 
+(1, 4), 
+(1, 5);
 
 -- Select all data from each table
 SELECT * FROM "ingredients";
