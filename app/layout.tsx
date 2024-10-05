@@ -9,7 +9,7 @@ import { Analytics } from "@vercel/analytics/react"
 export const metadata: Metadata = {
   title: {
     template: '%s | Wisecart',
-    default: 'Home',
+    default: 'Wisecart, your shopping list app',
   },
   description: 'Create your shopping list and save hours by using Wisecart',
 };
