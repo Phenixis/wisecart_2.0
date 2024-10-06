@@ -28,19 +28,33 @@ export default function PricingCard({
             <div className="pt-6">
                 <h2 className={`text-2xl font-medium ${disabled ? "text-gray-500" : "text-gray-900"} mb-2`}>{name}</h2>
                 <p className={`text-sm ${disabled ? "text-gray-500" : "text-gray-600"} mb-4`}>
-                with {trialDays} day free trial
+                with {trialDays} days free trial
                 </p>
-                <p className={`text-4xl font-medium ${disabled ? "text-gray-500" : "text-gray-900"} mb-6`}>
-                    {falsePrice ?
-                        <span className={`line-through ${disabled ? "text-gray-500" : "text-red-500"} text-2xl`}>
-                            ${falsePrice / 100}{' '}
+                <p className={`font-medium mb-6 ${disabled ? "text-gray-500" : "text-primary"}`}>
+                    {interval === 'year' ? 
+                    <span className='leading-none'>
+                        <span className="text-4xl">
+                            ${Math.round(price / 12) / 100}
                         </span>
-                        : ''
-                    }
-                    ${price / 100}{' '}
-                    <span className={`text-xl font-normal ${disabled ? "text-gray-500" : "text-gray-600"}`}>
-                        / {interval}
+                        <span className={`text-xl font-normal ${disabled ? "text-gray-500" : "text-gray-600"}`}>
+                            / month
+                        </span>
+                        <br/>
+                        <span className={`text-base ${disabled ? "text-gray-500" : "text-gray-600"}`}>
+                            Billed ${price / 100}{' '} annualy
+                        </span>
                     </span>
+                    : 
+                    <span>
+                        <span className="text-4xl">
+                            ${price / 100}{' '}
+                        </span>
+                        <span className={`text-xl font-normal ${disabled ? "text-gray-500" : "text-gray-600"}`}>
+                            / {interval}
+                        </span>
+                    </span>
+                    }
+                    
                 </p>
                 <ul className="space-y-4 mb-8">
                 {features.map((feature, index) => (
