@@ -23,7 +23,7 @@ export default function Sidebar({
 
     return (
     <aside
-        className={`w-64 border-r border-gray-200 lg:block ${
+        className={`w-64 border-r border-gray-200 lg:block bg-base-100 ${
             isSidebarOpen ? 'block' : 'hidden'
         } lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
