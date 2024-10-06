@@ -25,21 +25,22 @@ export default async function PricingPage() {
           interval={monthlyPrice?.interval || 'month'}
           trialDays={monthlyPrice?.trialPeriodDays || 7}
           features={[
-            'Unlimited Usage',
-            'Unlimited Workspace Members',
-            'Email Support',
+            'Unlimited Ingredients, Meals and Shopping Lists',
+            'Early access to new features',
+            'Price lock for life',
           ]}
           priceId={monthlyPrice?.id}
         />
         <PricingCard
           name={yearlyPrice?.nickname || 'Plus'}
           price={yearlyPrice?.unitAmount || 1200}
+          falsePrice={(monthlyPrice?.unitAmount ?? 0) * 12 || undefined}
           interval={yearlyPrice?.interval || 'month'}
           trialDays={yearlyPrice?.trialPeriodDays || 7}
           features={[
-            'Everything in Base, and:',
-            'Early Access to New Features',
-            '24/7 Support + Slack Access',
+            'All Base features',
+            '2 months free',
+            'Access to exclusive community with priority support',
           ]}
           priceId={yearlyPrice?.id}
         />
