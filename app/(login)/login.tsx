@@ -25,7 +25,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
     event.preventDefault();
     startTransition(() => {
       formAction(new FormData(event.currentTarget));
-  });
+  })};
 
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-base-100">
@@ -146,4 +146,4 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </div>
     </div>
   );
-}}
+}
