@@ -1,10 +1,19 @@
 import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe';
 import PricingCard from '@/components/ui/pricingCard';
+import { getUser, getTeamSubscriptionStatus } from '@/lib/db/queries';
+import { redirect } from 'next/navigation';
 
 // Prices are fresh for one hour max
 export const revalidate = 3600;
 
 export default async function PricingPage() {
+  const user = await getUser();
+  if (!user) {} else {
+    const teamSubscriptionStatus = await getTeamSubscriptionStatus(user.id);
+    if (teamSubscriptionStatus === 'active' || teamSubscriptionStatus === 'trialing') {
+      redirect('/dashboard');
+    }
+  }
 
   const [prices, products] = await Promise.all([
     getStripePrices(),
