@@ -1,17 +1,13 @@
-import { redirect } from "next/navigation";
-import { getUser, getTeamSubscriptionStatus } from "@/lib/db/queries";
 import ShoppingLists from "@/components/shoppingLists";
 import { Metadata } from 'next';
+import verifyUser from "@/components/utils/verifyUser";
 
 export const metadata: Metadata = {
   title: 'Shopping Lists',
 };
 
 export default async function DashboardPage() {
-    const user = await getUser();
-    if (!user) {
-        redirect('/sign-in');
-    }
+    await verifyUser();
     
     return (
         <ShoppingLists />

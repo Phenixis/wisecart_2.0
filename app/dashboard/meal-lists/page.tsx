@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getUser, getTeamSubscriptionStatus } from "@/lib/db/queries";
+import verifyUser from "@/components/utils/verifyUser";
 import MealList from "@/components/mealLists";
 import { Metadata } from 'next';
 
@@ -8,10 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-    const user = await getUser();
-    if (!user) {
-        redirect('/sign-in');
-    }
+    await verifyUser();
     
     return (
         <MealList />

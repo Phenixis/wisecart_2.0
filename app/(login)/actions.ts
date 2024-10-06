@@ -68,9 +68,11 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
     return createCheckoutSession({ team: foundTeam, priceId });
+  } else if (foundTeam?.subscriptionStatus !== 'trialing' && foundTeam?.subscriptionStatus !== 'active') {
+    return redirect('/pricing');
   }
 
-  redirect('/settings');
+  redirect('/dashboard');
 });
 
 const signUpSchema = z.object({
@@ -179,7 +181,7 @@ export const  signUp = validatedAction(signUpSchema, async (data, formData) => {
     return createCheckoutSession({ team: createdTeam, priceId });
   }
 
-  redirect('/settings');
+  redirect('/pricing');
 });
 
 export async function signOut() {

@@ -6,7 +6,7 @@ export default async function SignInPage() {
   const user = await getUser();
 
   if (user) {
-    redirect('/settings');
+    redirect('/dashboard');
   } else {
     return <Login mode="signin" />;
   }
