@@ -36,6 +36,20 @@
       "when": 1727973947468,
       "tag": "0004_redundant_hemingway",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1728272165870,
+      "tag": "0005_high_angel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1728272225346,
+      "tag": "0006_loving_lionheart",
+      "breakpoints": true
     }
   ]
 }

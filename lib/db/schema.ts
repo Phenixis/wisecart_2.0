@@ -125,14 +125,18 @@ export const mealsIngredients = pgTable('meals_ingredients', {
   unit: varchar('unit', { length: 50 }).notNull(),
 });
 
-export const shoppingListsMeals = pgTable('shopping_lists_meals', {
+export const shoppingListsMealsIngredients = pgTable('shopping_lists_meals_ingredients', {
   id: serial('id').primaryKey(),
   shoppingListId: integer('shopping_list_id')
     .notNull()
     .references(() => shoppingLists.id),
   mealId: integer('meal_id')
     .notNull()
-    .references(() => meals.id)
+    .references(() => meals.id),
+  ingredientId: integer('ingredient_id')
+    .notNull()
+    .references(() => ingredients.id),
+  completedAt: timestamp('completed_at'),
 });
 
 export const teamsRelations = relations(teams, ({ many }) => ({
@@ -187,12 +191,12 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
 
 export const mealsRelations = relations(meals, ({ many }) => ({
   ingredients: many(mealsIngredients),
-  shoppingLists: many(shoppingListsMeals),
-
+  shoppingLists: many(shoppingListsMealsIngredients),
 }));
 
 export const ingredientsRelations = relations(ingredients, ({ many }) => ({
   meals: many(mealsIngredients),
+  shoppingLists: many(shoppingListsMealsIngredients),
 }));
 
 export const mealsIngredientsRelations = relations(mealsIngredients, ({ one }) => ({
@@ -207,17 +211,22 @@ export const mealsIngredientsRelations = relations(mealsIngredients, ({ one }) =
 }));
 
 export const shoppingListsRelations = relations(shoppingLists, ({ many }) => ({
-  meals: many(shoppingListsMeals),
+  meals: many(shoppingListsMealsIngredients),
+  ingredients: many(shoppingListsMealsIngredients),
 }));
 
-export const shoppingListsMealsRelations = relations(shoppingListsMeals, ({ one }) => ({
+export const shoppingListsMealsIngredientsRelations = relations(shoppingListsMealsIngredients, ({ one }) => ({
   shoppingList: one(shoppingLists, {
-    fields: [shoppingListsMeals.shoppingListId],
+    fields: [shoppingListsMealsIngredients.shoppingListId],
     references: [shoppingLists.id],
   }),
   meal: one(meals, {
-    fields: [shoppingListsMeals.mealId],
+    fields: [shoppingListsMealsIngredients.mealId],
     references: [meals.id],
+  }),
+  ingredient: one(ingredients, {
+    fields: [shoppingListsMealsIngredients.ingredientId],
+    references: [ingredients.id],
   }),
 }));
 
@@ -244,8 +253,8 @@ export type MealIngredient = typeof mealsIngredients.$inferSelect;
 export type NewMealIngredient = typeof mealsIngredients.$inferInsert;
 export type ShoppingList = typeof shoppingLists.$inferSelect;
 export type NewShoppingList = typeof shoppingLists.$inferInsert;
-export type ShoppingListMeal = typeof shoppingListsMeals.$inferSelect;
-export type NewShoppingListMeal = typeof shoppingListsMeals.$inferInsert;
+export type ShoppingListMealIngredient = typeof shoppingListsMealsIngredients.$inferSelect;
+export type NewShoppingListMealIngredient = typeof shoppingListsMealsIngredients.$inferInsert;
 
 export enum ActivityType {
   SIGN_UP = 'SIGN_UP', // [x]
