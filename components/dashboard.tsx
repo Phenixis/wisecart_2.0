@@ -1,8 +1,6 @@
 import ShoppingList from "./ui/shoppingList";
 import MealList from './mealLists';
 import IngredientLists from './ingredientLists';
-import { Suspense } from "react";
-import DashboardSkeleton from "./skeletons/dashboardSkeleton";
 import { getLastShoppingList } from "@/app/dashboard/actions";
 import { getUser } from "@/lib/db/queries";
 import { redirect } from "next/navigation";
@@ -14,6 +12,7 @@ export default async function Dashboard() {
     }
 
     const shoppingList = await getLastShoppingList(user);
+
     return (
         <div className="p-6 spacing-y-4">
             {/* <h1 className="text-2xl font-bold">Dashboard</h1> */}
