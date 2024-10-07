@@ -7,7 +7,7 @@ import {
   users,
   meals,
   shoppingLists,
-  shoppingListsMeals,
+  shoppingListsMealsIngredients,
   mealsIngredients,
   ingredients
 } from './schema';
@@ -162,19 +162,18 @@ export async function getTeamSubscriptionStatus(userId: number) {
   return team.subscriptionStatus;
 }
 
+/* Une commande qui renvoie l'entièreté des ingrédients d'une liste de courses donnée en faisant la somme des mêmes ingrédients. */
 export async function getShoppingListIngredients(shoppingListId: number) {
   return await db
     .select({
-      'Ingredient': ingredients.name,
-      'Total Quantity': sql`SUM(mi.quantity_per_person * m.nb_persons * slm.quantity)`,
-      'Unit': mealsIngredients.unit,
+      ingredientId: shoppingListsMealsIngredients.ingredientId,
+      name: ingredients.name,
+      quantity: sql`SUM(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
     })
-    .from(shoppingLists)
-    .innerJoin(shoppingListsMeals, eq(shoppingLists.id, shoppingListsMeals.shoppingListId))
-    .innerJoin(meals, eq(shoppingListsMeals.mealId, meals.id))
-    .innerJoin(mealsIngredients, eq(meals.id, mealsIngredients.mealId))
-    .innerJoin(ingredients, eq(mealsIngredients.ingredientId, ingredients.id))
-    .where(eq(shoppingLists.id, shoppingListId))
-    .groupBy(ingredients.name, mealsIngredients.unit)
-    .orderBy(ingredients.name);
+    .from(shoppingListsMealsIngredients)
+    .innerJoin(mealsIngredients, eq(shoppingListsMealsIngredients.mealId, mealsIngredients.mealId))
+    .innerJoin(ingredients, eq(shoppingListsMealsIngredients.ingredientId, ingredients.id))
+    .innerJoin(meals, eq(shoppingListsMealsIngredients.mealId, meals.id))
+    .where(eq(shoppingListsMealsIngredients.shoppingListId, shoppingListId))
+    .groupBy(shoppingListsMealsIngredients.ingredientId);
 }
