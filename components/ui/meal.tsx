@@ -1,6 +1,6 @@
 import { getIngredientsOfMeal } from "@/app/dashboard/actions";
 import { Meal as MealType, User } from "@/lib/db/schema";
-import Ingredient from "./ingredient";
+import Ingredient from "../ingredient";
 import { User as UserIcon } from "lucide-react";
 import { Suspense } from "react";
 import MealSkeleton from "./../skeletons/mealSkeleton";
