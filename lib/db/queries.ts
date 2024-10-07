@@ -169,6 +169,7 @@ export async function getShoppingListIngredients(shoppingListId: number) {
       ingredientId: shoppingListsMealsIngredients.ingredientId,
       name: ingredients.name,
       quantity: sql`SUM(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
+      unit: mealsIngredients.unit,
     })
     .from(shoppingListsMealsIngredients)
     .innerJoin(mealsIngredients, eq(shoppingListsMealsIngredients.mealId, mealsIngredients.mealId))
