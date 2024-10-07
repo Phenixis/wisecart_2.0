@@ -8,7 +8,7 @@ import {
     ingredients,
     mealsIngredients,
     shoppingLists,
-    shoppingListsMeals,
+    shoppingListsMealsIngredients,
     User,
     ActivityType,
     type NewMeal,
@@ -71,12 +71,14 @@ export async function getAllIngredients(user: User) {
             createdBy: ingredients.createdBy,
             teamId: ingredients.teamId,
             createdAt: ingredients.createdAt,
+            updatedAt: ingredients.updatedAt,
+            deletedAt: ingredients.deletedAt,
         })
         .from(ingredients)
         .where(
             and(
                 eq(ingredients.teamId, team.id),
-                isNotNull(ingredients.deletedAt),
+                isNull(ingredients.deletedAt),
             ),
         );
 };
@@ -266,12 +268,12 @@ export async function getMealsOfShoppingList(user: User, shoppingListId: number)
             deletedAt: meals.deletedAt,
         })
         .from(meals)
-        .innerJoin(shoppingListsMeals, eq(meals.id, shoppingListsMeals.mealId))
+        .innerJoin(shoppingListsMealsIngredients, eq(meals.id, shoppingListsMealsIngredients.mealId))
         .where(
             and(
                 eq(meals.teamId, team.id),
                 isNull(meals.deletedAt),
-                eq(shoppingListsMeals.shoppingListId, shoppingListId),
+                eq(shoppingListsMealsIngredients.shoppingListId, shoppingListId),
             ),
         );
 };
@@ -498,7 +500,7 @@ export const getShoppingListAsCsv = validatedActionWithUser(
             throw new Error('No ingredients found for shopping list');
         }
 
-        return ingredients.map((ingredient) => `${ingredient.Ingredient},${ingredient['Total Quantity']},${ingredient.Unit}`).join('\n');
+        return ingredients.map((ingredient) => `${ingredient.ingredientId},${ingredient.name},${ingredient.quantity},${ingredient.unit}`).join('\n');
     }
 );
 
@@ -524,7 +526,7 @@ export const getShoppingListAsMarkdown = validatedActionWithUser(
             throw new Error('No ingredients found for shopping list');
         }
 
-        return ingredients.map((ingredient) => `- [ ] ${ingredient.Ingredient} (${ingredient['Total Quantity']} ${ingredient.Unit})`).join('\n');
+        return ingredients.map((ingredient) => `- [ ] ${ingredient.name} : ${ingredient.quantity}${ingredient.unit}`).join('\n');
     }
 );
 
@@ -550,7 +552,7 @@ export const getShoppingListAsText = validatedActionWithUser(
             throw new Error('No ingredients found for shopping list');
         }
 
-        return ingredients.map((ingredient) => `- ${ingredient.Ingredient} (${ingredient['Total Quantity']} ${ingredient.Unit})`).join('\n');
+        return ingredients.map((ingredient) => `- ${ingredient.name} : ${ingredient.quantity}${ingredient.unit}`).join('\n');
     }
 );
 
@@ -598,8 +600,19 @@ export const addMealToShoppingList = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
 
+        const ingredientsOfMeal = await getIngredientsOfMeal(user, data.mealId);
+
+        
+        const insertPromises = ingredientsOfMeal.map(ingredient =>
+            db.insert(shoppingListsMealsIngredients).values({
+                shoppingListId: data.shoppingListId,
+                mealId: data.mealId,
+                ingredientId: ingredient.id,
+            })
+        );
+
         await Promise.all([
-            db.insert(shoppingListsMeals).values(data),
+            ...insertPromises,
             logActivity(team.id, user.id, ActivityType.ADDED_MEAL_TO_SHOPPING_LIST),
         ]);
     }
@@ -622,21 +635,21 @@ export const removeOneInstanceOfOneMealFromShoppingList = validatedActionWithUse
 
         const mealId = await db
             .select({
-                id: shoppingListsMeals.id,
+                id: shoppingListsMealsIngredients.id,
             })
-            .from(shoppingListsMeals)
+            .from(shoppingListsMealsIngredients)
             .where(
                 and(
-                    eq(shoppingListsMeals.shoppingListId, data.shoppingListId),
-                    eq(shoppingListsMeals.mealId, data.mealId),
+                    eq(shoppingListsMealsIngredients.shoppingListId, data.shoppingListId),
+                    eq(shoppingListsMealsIngredients.mealId, data.mealId),
                 ),
             ).limit(1);
 
         await Promise.all([
             db
-            .delete(shoppingListsMeals)
+            .delete(shoppingListsMealsIngredients)
             .where(
-                eq(shoppingListsMeals.shoppingListId, mealId[0].id),
+                eq(shoppingListsMealsIngredients.shoppingListId, mealId[0].id),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_ONE_INSTANCE_OF_ONE_MEAL_FROM_SHOPPING_LIST),
         ]);
@@ -660,11 +673,11 @@ export const removeAllInstanceOfOneMealFromShoppingList = validatedActionWithUse
 
         await Promise.all([
             db
-            .delete(shoppingListsMeals)
+            .delete(shoppingListsMealsIngredients)
             .where(
                 and(
-                    eq(shoppingListsMeals.shoppingListId, data.shoppingListId),
-                    eq(shoppingListsMeals.mealId, data.mealId),
+                    eq(shoppingListsMealsIngredients.shoppingListId, data.shoppingListId),
+                    eq(shoppingListsMealsIngredients.mealId, data.mealId),
                 ),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_ALL_INSTANCES_OF_ONE_MEAL_FROM_SHOPPING_LIST),
@@ -688,9 +701,9 @@ export const removeAllMealsFromShoppingList = validatedActionWithUser(
 
         await Promise.all([
             db
-            .delete(shoppingListsMeals)
+            .delete(shoppingListsMealsIngredients)
             .where(
-                eq(shoppingListsMeals.shoppingListId, data.shoppingListId),
+                eq(shoppingListsMealsIngredients.shoppingListId, data.shoppingListId),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_ALL_MEALS_FROM_SHOPPING_LIST),
         ]);
