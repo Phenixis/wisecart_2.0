@@ -9,17 +9,19 @@ INSERT INTO "meals" ("name", "description", "nb_persons", "team_id", "created_by
 ('Pizza', 'Cheese pizza', 4, 3, 3);
 
 INSERT INTO "meals_ingredients" ("meal_id", "ingredient_id", "quantity_per_person", "unit") VALUES 
-(4, 8, 2, 'pieces'), 
-(4, 10, 1, 'head'), 
-(5, 8, 3, 'pieces'), 
-(5, 9, 200, 'grams');
+(1, 1, 2, 'pieces'), 
+(1, 3, 1, 'head'), 
+(2, 1, 3, 'pieces'), 
+(2, 2, 200, 'grams');
 
 INSERT INTO "shopping_lists" ("name", "team_id", "created_by") VALUES 
 ('Weekly Groceries', 3, 3);
 
-INSERT INTO "shopping_lists_meals" ("shopping_list_id", "meal_id") VALUES 
-(1, 4), 
-(1, 5);
+INSERT INTO "shopping_lists_meals_ingredients" ("shopping_list_id", "meal_id", "ingredient_id") VALUES 
+(1, 4, 8),
+(1, 4, 10),
+(1, 5, 8),
+(1, 5, 9);
 
 -- Select all data from each table
 SELECT * FROM "ingredients";
