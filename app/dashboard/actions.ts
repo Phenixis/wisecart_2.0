@@ -32,7 +32,6 @@ import {
 // Create an ingredient
 const createIngredientSchema = z.object({
     name: z.string().min(1),
-    description: z.string().optional(),
 });
 
 export const createIngredient = validatedActionWithUser(
@@ -41,6 +40,10 @@ export const createIngredient = validatedActionWithUser(
         const team = await getTeamForUser(user.id);
         if (!team) {
             throw new Error('User does not belong to a team');
+        }
+
+        if (await getAllIngredients(user).then((ingredients) => ingredients.some((ingredient) => ingredient.name === data.name))) {
+            return { error: `Ingredient '${data.name}' already exists` };
         }
 
         const newIngredients: NewIngredient = {
@@ -53,6 +56,8 @@ export const createIngredient = validatedActionWithUser(
             db.insert(ingredients).values(newIngredients),
             logActivity(team.id, user.id, ActivityType.CREATE_INGREDIENT),
         ]);
+
+        return { success: `Ingredient '${data.name}' created` };
     },
 );
 
