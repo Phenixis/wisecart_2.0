@@ -1,7 +1,7 @@
 import verifyUser from "@/components/utils/verifyUser";
 import IngredientLists from "@/components/ingredientLists";
 import { Metadata } from 'next';
-import CreationPopup from "@/components/ui/creationPopup";
+import CreationPopup from "@/components/ui/ingredientCreationPopup";
 
 export const metadata: Metadata = {
   title: 'Ingredient Lists',
