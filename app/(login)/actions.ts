@@ -77,7 +77,10 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 
 const signUpSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, {
+    message: 'Password must contain at least 8 characters with a lowercase, an uppercase, a number, and a special character (e.g. @$!%*?&)',
+  }
+  ),
   inviteId: z.string().optional(),
 });
 
