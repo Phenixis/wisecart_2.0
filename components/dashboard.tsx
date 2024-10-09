@@ -29,7 +29,7 @@ export default async function Dashboard() {
             </div>
             <div className="flex">
                 <div className="w-1/2">
-                <Link key={"/dashboard/meal-list"} href={"/dashboard/meal-list"} passHref className="flex group">
+                    <Link key={"/dashboard/meal-list"} href={"/dashboard/meal-list"} passHref className="flex group">
                         <h2 className="text-xl font-bold">Meal List</h2>
                         <ArrowUpRight size={16} className="hidden text-primary group-hover:block" />
                     </Link>

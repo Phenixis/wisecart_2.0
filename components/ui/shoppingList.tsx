@@ -13,7 +13,7 @@ export default async function ShoppingList({ user, shoppingList }: { user: User,
             <div className="p-6 w-64 shadow bg-yellow-100 h-[50vh]">
                 <h3 className="text-xl font-semibold leading-none">{shoppingList.name}</h3>
                 {meals.map((meal) => (
-                    <Meal key={meal.id} user={user} meal={meal} />
+                    <Meal key={meal.id} user={user} meal={meal} shoppingListId={shoppingList.id}/>
                 ))}
             </div>
         </Suspense>

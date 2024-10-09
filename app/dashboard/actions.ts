@@ -176,6 +176,71 @@ export const updateIngredient = validatedActionWithUser(
     },
 );
 
+export async function isIngredientToggled(ingredientId: number, mealId: number, shoppingListId: number) {
+    const result = await db
+        .select({
+            completedAt: shoppingListsMealsIngredients.completedAt,
+        })
+        .from(shoppingListsMealsIngredients)
+        .where(
+            and(
+                eq(shoppingListsMealsIngredients.ingredientId, ingredientId),
+                eq(shoppingListsMealsIngredients.mealId, mealId),
+                eq(shoppingListsMealsIngredients.shoppingListId, shoppingListId),
+            ),
+        );
+    
+    return result[0].completedAt !== null;
+};
+
+const toggleIngredientSchema = z.object({
+    idShoppingList: z.string().regex(/^\d+$/),
+    idMeal: z.string().regex(/^\d+$/),
+    idIngredient: z.string().regex(/^\d+$/),
+});
+
+export const toggleIngredient = validatedActionWithUser(
+    toggleIngredientSchema,
+    async (data: z.infer<typeof toggleIngredientSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+        let isToggled = await isIngredientToggled(Number(data.idIngredient), Number(data.idMeal), Number(data.idShoppingList));
+        console.log(isToggled);
+
+        //PB : modifie les ingrédients de tous les mêmes meals de la shopping list et pas uniquement celui qui est choisit
+        // Solution possible : fusionner les mêmes meals (peut-être que dans l'affichage) pour les toggled tous en même temps
+        // Autre solution : récupérer l'identifiant de la ligne dans la relation et le passer en paramètre pour ne modifier que celui-ci
+        if (isToggled) { 
+            await Promise.all([
+                db.update(shoppingListsMealsIngredients)
+                .set({completedAt: null})
+                .where(
+                    and(
+                        eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
+                        eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
+                        eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
+                    ),
+                ),
+            ]);
+        } else {
+            await Promise.all([
+                db.update(shoppingListsMealsIngredients)
+                .set({completedAt: new Date()})
+                .where(
+                    and(
+                        eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
+                        eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
+                        eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
+                    ),
+                ),
+            ]);
+        }
+        return { 'isToggled': !isToggled };
+    },
+);
+
 // Delete an ingredient
 
 const deleteIngredientSchema = z.object({
