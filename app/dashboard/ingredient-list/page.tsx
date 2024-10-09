@@ -16,7 +16,7 @@ export default async function DashboardPage() {
           <h2 className="text-2xl font-semibold">Ingredient Lists</h2>
           <CreationPopup />
         </div>
-        <IngredientLists />
+        <IngredientLists isCreationDateVisible={true} isLastUpdateDateVisible={true} isEditPossible={true}/>
       </div>
     );
 };
