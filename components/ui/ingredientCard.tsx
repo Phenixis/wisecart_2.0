@@ -1,8 +1,7 @@
 import { getUserWithId } from "@/lib/db/queries";
-import { Pen } from "lucide-react";
 import EditPopup from "./ingredientEditPopup";
 
-export default async function IngredientCard({ ingredient } : {ingredient : any}) {
+export default async function IngredientCard({ ingredient, isCreationDateVisible, isLastUpdateDateVisible, isEditPossible } : {ingredient : any, isCreationDateVisible ?: boolean, isLastUpdateDateVisible ?: boolean, isEditPossible ?: boolean}) {
     const user = (await getUserWithId(ingredient.createdBy)).at(0);
     if (!user) {
         throw new Error('User not found');        
@@ -18,12 +17,14 @@ export default async function IngredientCard({ ingredient } : {ingredient : any}
         <div className="bg-white shadow-md rounded-lg p-2 w-fit rounded-xl mr-4 mb-4 group">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-700">{ingredient.name}</h3>
+                { isEditPossible ? 
                 <div className="hidden group-hover:block">
                     <EditPopup ingredient={ingredient} />
                 </div>
+                : '' }
             </div>
-            <p className="text-xs">Created by {user.name} the {ingredient.createdAt.toLocaleDateString()}</p>
-            <p className="text-xs">Last update : {ingredient.updatedAt.toLocaleDateString()}</p>
+            { isCreationDateVisible ? <p className="text-xs">Created by {user.name} the {ingredient.createdAt.toLocaleDateString()}</p> : '' }
+            { isLastUpdateDateVisible ? <p className="text-xs">Last update : {ingredient.updatedAt.toLocaleDateString()}</p> : '' }
         </div>
     )
 }

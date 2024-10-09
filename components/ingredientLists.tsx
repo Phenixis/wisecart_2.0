@@ -5,7 +5,7 @@ import { getUser } from "@/lib/db/queries";
 import { redirect } from "next/navigation";
 import Ingredient from "./ingredient";
 
-export default async function IngredientLists() {
+export default async function IngredientLists({isCreationDateVisible, isLastUpdateDateVisible, isEditPossible} : {isCreationDateVisible ?: boolean, isLastUpdateDateVisible ?: boolean, isEditPossible ?: boolean}) {
     const user = await getUser();
     if (!user) {
         redirect('/sign-in');
@@ -17,7 +17,7 @@ export default async function IngredientLists() {
         <Suspense fallback={<IngredientListsSkeleton />}>
             <div className="p-4 flex items-center flex-wrap">
                 {ingredients.map((ingredient) => (
-                    <Ingredient key={ingredient.id} ingredient={ingredient} mode={"card"} />
+                    <Ingredient key={ingredient.id} ingredient={ingredient} mode={"card"} isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} isEditPossible={isEditPossible} />
                 ))}
             </div>
         </Suspense>
