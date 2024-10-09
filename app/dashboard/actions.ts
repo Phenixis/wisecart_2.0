@@ -149,9 +149,8 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
 // Update an ingredient
 
 const updateIngredientSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
     name: z.string().min(1),
-    description: z.string().optional(),
 });
 
 export const updateIngredient = validatedActionWithUser(
@@ -163,13 +162,15 @@ export const updateIngredient = validatedActionWithUser(
         }
 
         const newIngredients: NewIngredient = {
-            ...data,
+            id: Number(data.id),
+            name: data.name,
             createdBy: user.id,
+            updatedAt: new Date(),
             teamId: team.id,
         };
 
         await Promise.all([
-            db.update(ingredients).set(newIngredients).where(eq(ingredients.id, data.id)),
+            db.update(ingredients).set(newIngredients).where(eq(ingredients.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.UPDATE_INGREDIENT),
         ]);
     },
@@ -178,19 +179,20 @@ export const updateIngredient = validatedActionWithUser(
 // Delete an ingredient
 
 const deleteIngredientSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const deleteIngredient = validatedActionWithUser(
     deleteIngredientSchema,
     async (data: z.infer<typeof deleteIngredientSchema>, _, user) => {
+        console.log("Ingredient deletion...");
         const team = await getTeamForUser(user.id);
         if (!team) {
             throw new Error('User does not belong to a team');
         }
 
         await Promise.all([
-            db.update(ingredients).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(ingredients.id, data.id)),
+            db.update(ingredients).set({deletedAt: new Date()}).where(eq(ingredients.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.DELETE_INGREDIENT),
         ]);
     },

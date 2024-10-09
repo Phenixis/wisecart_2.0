@@ -47,6 +47,7 @@ export function validatedActionWithUser<S extends z.ZodType<any, any>, T>(
     It combines form validation and user authentication in a single step, reducing boilerplate code and potential errors.
   */
   return async (prevState: ActionState, formData: FormData): Promise<T> => {
+    console.log("Validating action with user");
     const user = await getUser();
     if (!user) {
       throw new Error('User is not authenticated');

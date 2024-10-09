@@ -31,7 +31,7 @@ export default function Sidebar({
         >
         <nav className="h-full overflow-y-auto">
             <Button
-            className="lg:hidden"
+            className="lg:hidden ml-3 mt-3"
             variant="ghost"
             size={'icon'}
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
