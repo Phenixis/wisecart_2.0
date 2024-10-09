@@ -14,8 +14,8 @@ export default async function IngredientLists({isCreationDateVisible, isLastUpda
     const ingredients = await getAllIngredients(user);
 
     return (
-        <Suspense fallback={<IngredientListsSkeleton />}>
-            <div className="p-4 flex items-center flex-wrap">
+        <Suspense fallback={<IngredientListsSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible}/>}>
+            <div className="p-4 flex items-center flex-wrap justify-between">
                 {ingredients.map((ingredient) => (
                     <Ingredient key={ingredient.id} ingredient={ingredient} mode={"card"} isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} isEditPossible={isEditPossible} />
                 ))}

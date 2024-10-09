@@ -1,7 +1,14 @@
-export default function ingredientListsSkeleton() {
+import IngredientCardSkeleton from "./ingredientCardSkeleton";
+
+export default function ingredientListsSkeleton({isCreationDateVisible, isLastUpdateDateVisible} : {isCreationDateVisible ?: boolean, isLastUpdateDateVisible ?: boolean}) {
   return (
-    <div className="p-5 spacing-y-4 size-full bg-green-500">
-      <h2 className="text-xl font-bold">Ingredient Lists</h2>
+    <div className="animate-pulse p-4 flex items-center flex-wrap justify-between">
+      <IngredientCardSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} />
+      <IngredientCardSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} />
+      <IngredientCardSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} />
+      <IngredientCardSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} />
+      <IngredientCardSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} />
+      <IngredientCardSkeleton isCreationDateVisible={isCreationDateVisible} isLastUpdateDateVisible={isLastUpdateDateVisible} />
     </div>
-    );
+  );
 }
