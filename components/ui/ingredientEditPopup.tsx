@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, Pen, Plus, Trash, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Pen, Plus, Trash, X } from 'lucide-react';
 import { useState, useActionState, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
@@ -17,6 +17,7 @@ export default function EditPopup({ ingredient }: { ingredient: any }) {
         deleteIngredient,
         { error: '' }
     );
+    const [hasChanged, setHasChanged] = useState(false);
 
     useEffect(() => {
         if (state?.success || deleteState?.success) {
@@ -35,9 +36,11 @@ export default function EditPopup({ ingredient }: { ingredient: any }) {
                     onClick={() => setIsOpen(false)}
                 >
                     <div className='bg-white rounded-xl p-4 w-96 space-y-4'>
-
                         <div className='flex items-center justify-between'>
-                            <h2 className="text-2xl font-semibold">Edit the Ingredient</h2>
+                            <div className='flex items-center justify-between space-x-1'>
+                                <ArrowLeft className="cursor-pointer" onClick={() => setIsOpen(false)} />
+                                <h2 className="text-2xl font-semibold">Edit the Ingredient</h2>
+                            </div>
                             <form 
                                 onClick={(e) => e.stopPropagation()}
                                 action={deleteAction}>
@@ -75,6 +78,14 @@ export default function EditPopup({ ingredient }: { ingredient: any }) {
                                     className="appearance-none rounded-xl relative block w-full px-3 py-2  border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                                     placeholder="Pineapple"
                                     defaultValue={ingredient.name}
+                                    onChange={(e) => {
+                                            if (e.target.value !== ingredient.name && e.target.value !== '') { 
+                                                setHasChanged(true);
+                                            } else {
+                                                setHasChanged(false);
+                                            }
+                                        }
+                                    }
                                 />
                             </div>
                             {state?.error && (
@@ -86,7 +97,7 @@ export default function EditPopup({ ingredient }: { ingredient: any }) {
                             <Button
                                 type="submit"
                                 className="rounded-xl text-white font-semibold"
-                                disabled={pending}
+                                disabled={pending || hasChanged === false}
                             >
                                 {pending ? (
                                     <>
