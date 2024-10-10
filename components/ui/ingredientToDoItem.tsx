@@ -32,7 +32,7 @@ export default function Ingredient({ingredient, mealId, shoppingListId, isIngred
                 <input className='hidden' name="mealOrder" type="number" value={mealOrder} readOnly/>
                 <button
                     type="submit"
-                    className={`p-2 my-1 size-1 border border-neutral rounded-full ${ingredientCompletion ? 'bg-primary hover:bg-transparent' : 'hover:bg-primary'} `}
+                    className={`p-2 my-1 size-1 border border-neutral rounded-full ${ingredientCompletion ? 'bg-primary lg:hover:bg-transparent' : 'lg:hover:bg-primary'} `}
                 />
             </form>
             <p className="leading-none">
