@@ -27,9 +27,9 @@ export default function Ingredient({ingredient, mealId, shoppingListId, isIngred
         <div
             className={`flex items-center space-x-1 text-sm ${ingredientCompletion ? 'line-through' : ''}`}>
             <form action={formAction}>
-                <input className='hidden' name="idIngredient" type="number" value={ingredient.id} />
-                <input className='hidden' name="idMeal" type="number" value={mealId} />
-                <input className='hidden' name="idShoppingList" type="number" value={shoppingListId} />
+                <input className='hidden' name="idIngredient" type="number" value={ingredient.id} readOnly/>
+                <input className='hidden' name="idMeal" type="number" value={mealId} readOnly/>
+                <input className='hidden' name="idShoppingList" type="number" value={shoppingListId} readOnly/>
                 <button
                     type="submit"
                     className={`p-2 my-1 size-1 border border-neutral rounded-full ${ingredientCompletion ? 'bg-primary hover:bg-transparent' : 'hover:bg-primary'} `}
