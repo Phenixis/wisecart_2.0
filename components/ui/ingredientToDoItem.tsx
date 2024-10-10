@@ -3,9 +3,8 @@
 import { toggleIngredient } from "@/app/dashboard/actions";
 import { ActionState } from '@/lib/auth/middleware';
 import { useActionState } from "react";
-import { isSet } from "util/types";
 
-export default function Ingredient({ingredient, mealId, shoppingListId, isIngredientToggled} : {ingredient: any, mealId: number, shoppingListId: number, isIngredientToggled: boolean}) {
+export default function Ingredient({ingredient, mealId, shoppingListId, isIngredientToggled, mealOrder} : {ingredient: any, mealId: number, shoppingListId: number, isIngredientToggled: boolean, mealOrder: number}) {
     if (!ingredient.id) {
         throw new Error('Ingredient ID is required');
     } else if (!ingredient.name) {
@@ -30,6 +29,7 @@ export default function Ingredient({ingredient, mealId, shoppingListId, isIngred
                 <input className='hidden' name="idIngredient" type="number" value={ingredient.id} readOnly/>
                 <input className='hidden' name="idMeal" type="number" value={mealId} readOnly/>
                 <input className='hidden' name="idShoppingList" type="number" value={shoppingListId} readOnly/>
+                <input className='hidden' name="mealOrder" type="number" value={mealOrder} readOnly/>
                 <button
                     type="submit"
                     className={`p-2 my-1 size-1 border border-neutral rounded-full ${ingredientCompletion ? 'bg-primary hover:bg-transparent' : 'hover:bg-primary'} `}

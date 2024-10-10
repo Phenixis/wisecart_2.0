@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, sql, max } from 'drizzle-orm';
 import { db } from '@/lib/db/drizzle';
 import {
     meals,
@@ -176,7 +176,7 @@ export const updateIngredient = validatedActionWithUser(
     },
 );
 
-export async function isIngredientToggled(ingredientId: number, mealId: number, shoppingListId: number) {
+export async function isIngredientToggled(ingredientId: number, mealId: number, shoppingListId: number, mealOrder: number) {
     const result = await db
         .select({
             completedAt: shoppingListsMealsIngredients.completedAt,
@@ -187,6 +187,7 @@ export async function isIngredientToggled(ingredientId: number, mealId: number, 
                 eq(shoppingListsMealsIngredients.ingredientId, ingredientId),
                 eq(shoppingListsMealsIngredients.mealId, mealId),
                 eq(shoppingListsMealsIngredients.shoppingListId, shoppingListId),
+                eq(shoppingListsMealsIngredients.mealOrder, mealOrder),
             ),
         );
     
@@ -197,6 +198,7 @@ const toggleIngredientSchema = z.object({
     idShoppingList: z.string().regex(/^\d+$/),
     idMeal: z.string().regex(/^\d+$/),
     idIngredient: z.string().regex(/^\d+$/),
+    mealOrder: z.string().regex(/^\d+$/),
 });
 
 export const toggleIngredient = validatedActionWithUser(
@@ -206,7 +208,7 @@ export const toggleIngredient = validatedActionWithUser(
         if (!team) {
             throw new Error('User does not belong to a team');
         }
-        let isToggled = await isIngredientToggled(Number(data.idIngredient), Number(data.idMeal), Number(data.idShoppingList));
+        let isToggled = await isIngredientToggled(Number(data.idIngredient), Number(data.idMeal), Number(data.idShoppingList), Number(data.mealOrder));
         console.log(isToggled);
 
         //PB : modifie les ingrédients de tous les mêmes meals de la shopping list et pas uniquement celui qui est choisit
@@ -221,6 +223,7 @@ export const toggleIngredient = validatedActionWithUser(
                         eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
                         eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
                         eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
+                        eq(shoppingListsMealsIngredients.mealOrder, Number(data.mealOrder)),
                     ),
                 ),
             ]);
@@ -233,6 +236,7 @@ export const toggleIngredient = validatedActionWithUser(
                         eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
                         eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
                         eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
+                        eq(shoppingListsMealsIngredients.mealOrder, Number(data.mealOrder)),
                     ),
                 ),
             ]);
@@ -338,15 +342,21 @@ export async function getMealsOfShoppingList(user: User, shoppingListId: number)
             createdAt: meals.createdAt,
             updatedAt: meals.updatedAt,
             deletedAt: meals.deletedAt,
+            order: shoppingListsMealsIngredients.mealOrder,
         })
         .from(meals)
         .innerJoin(shoppingListsMealsIngredients, eq(meals.id, shoppingListsMealsIngredients.mealId))
         .where(
             and(
                 eq(meals.teamId, team.id),
-                isNull(meals.deletedAt),
                 eq(shoppingListsMealsIngredients.shoppingListId, shoppingListId),
+                isNull(meals.deletedAt),
             ),
+        )
+        .groupBy(
+            meals.id,
+            shoppingListsMealsIngredients.mealId,
+            shoppingListsMealsIngredients.mealOrder,
         );
 };
 
@@ -659,6 +669,20 @@ export const updateShoppingList = validatedActionWithUser(
 
 // Add a meal to a shopping list
 
+async function getOrderOfMealsInShoppingList(shoppingListId: number, mealId: number) {
+    return db
+        .select({
+            mealOrder: max(shoppingListsMealsIngredients.mealOrder),
+        })
+        .from(shoppingListsMealsIngredients)
+        .where(
+            and(
+                eq(shoppingListsMealsIngredients.shoppingListId, shoppingListId),
+                eq(shoppingListsMealsIngredients.mealId, mealId),
+            )
+        );
+}
+
 const addMealToShoppingListSchema = z.object({
     shoppingListId: z.number(),
     mealId: z.number()
@@ -673,13 +697,14 @@ export const addMealToShoppingList = validatedActionWithUser(
         }
 
         const ingredientsOfMeal = await getIngredientsOfMeal(user, data.mealId);
-
+        const orderOfMealsInShoppingList = await getOrderOfMealsInShoppingList(data.shoppingListId, data.mealId);
         
         const insertPromises = ingredientsOfMeal.map(ingredient =>
             db.insert(shoppingListsMealsIngredients).values({
                 shoppingListId: data.shoppingListId,
                 mealId: data.mealId,
                 ingredientId: ingredient.id,
+                mealOrder: orderOfMealsInShoppingList[0].mealOrder !== null ? orderOfMealsInShoppingList[0].mealOrder + 1 : 0,
             })
         );
 

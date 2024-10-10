@@ -5,7 +5,7 @@ import { User as UserIcon } from "lucide-react";
 import { Suspense } from "react";
 import MealSkeleton from "./../skeletons/mealSkeleton";
 
-export default async function Meal({ user, meal, ingredientMode, shoppingListId }: { user: User, meal: MealType, ingredientMode?: string, shoppingListId: number }) {
+export default async function Meal({ user, meal, ingredientMode, shoppingListId }: { user: User, meal: any /* MealType + mealOrder */, ingredientMode?: string, shoppingListId: number }) {
 
     const ingredients = await getIngredientsOfMeal(user, meal.id);
 
@@ -21,7 +21,7 @@ export default async function Meal({ user, meal, ingredientMode, shoppingListId 
                 </div>
                 <div>
                     {ingredients.map((ingredient) => (
-                        <Ingredient key={ingredient.id} ingredient={ingredient} mode={ingredientMode} mealId={meal.id} shoppingListId={shoppingListId}/>
+                        <Ingredient key={ingredient.id} ingredient={ingredient} mode={ingredientMode} mealId={meal.id} shoppingListId={shoppingListId} mealOrder={meal.order}/>
                     ))}
                 </div>
             </div>
