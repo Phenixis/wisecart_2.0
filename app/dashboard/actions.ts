@@ -211,9 +211,6 @@ export const toggleIngredient = validatedActionWithUser(
         let isToggled = await isIngredientToggled(Number(data.idIngredient), Number(data.idMeal), Number(data.idShoppingList), Number(data.mealOrder));
         console.log(isToggled);
 
-        //PB : modifie les ingrédients de tous les mêmes meals de la shopping list et pas uniquement celui qui est choisit
-        // Solution possible : fusionner les mêmes meals (peut-être que dans l'affichage) pour les toggled tous en même temps
-        // Autre solution : récupérer l'identifiant de la ligne dans la relation et le passer en paramètre pour ne modifier que celui-ci
         if (isToggled) { 
             await Promise.all([
                 db.update(shoppingListsMealsIngredients)
@@ -691,6 +688,7 @@ const addMealToShoppingListSchema = z.object({
 export const addMealToShoppingList = validatedActionWithUser(
     addMealToShoppingListSchema,
     async (data: z.infer<typeof addMealToShoppingListSchema>, _, user) => {
+        /* Fonction à tester */
         const team = await getTeamForUser(user.id);
         if (!team) {
             throw new Error('User does not belong to a team');
