@@ -1,0 +1,1 @@
+ALTER TABLE "shopping_lists_meals_ingredients" ALTER COLUMN "meal_order" SET DEFAULT 0;

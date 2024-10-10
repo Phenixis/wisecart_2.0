@@ -1,0 +1,1 @@
+ALTER TABLE "shopping_lists_meals_ingredients" ADD COLUMN "meal_order" integer NOT NULL DEFAULT 0;

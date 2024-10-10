@@ -137,6 +137,7 @@ export const shoppingListsMealsIngredients = pgTable('shopping_lists_meals_ingre
     .notNull()
     .references(() => ingredients.id),
   completedAt: timestamp('completed_at'),
+  mealOrder: integer('meal_order').default(0).notNull(),
 });
 
 export const teamsRelations = relations(teams, ({ many }) => ({
