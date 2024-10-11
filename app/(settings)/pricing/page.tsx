@@ -1,5 +1,5 @@
 import PricingCard from '@/components/ui/pricingCard';
-import { getUser, getTeamSubscriptionStatus } from '@/lib/db/queries';
+import { getUser, getTeamPaymentStatus } from '@/lib/db/queries';
 import { redirect } from 'next/navigation';
 import Pricing from '@/components/pricing';
 
@@ -9,8 +9,8 @@ export const revalidate = 3600;
 export default async function PricingPage() {
   const user = await getUser();
   if (!user) {} else {
-    const teamSubscriptionStatus = await getTeamSubscriptionStatus(user.id);
-    if (teamSubscriptionStatus === 'active' || teamSubscriptionStatus === 'trialing') {
+    const teamPaymentStatus = await getTeamPaymentStatus(user.id);
+    if (teamPaymentStatus === 'active' || teamPaymentStatus === 'trialing') {
       redirect('/dashboard');
     }
   }
