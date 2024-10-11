@@ -15,6 +15,7 @@ export default async function Pricing() {
   
     const monthlyPrice = prices.find((price) => (price.productId === earlyAccessPlan?.id && price.nickname === "Early Access Monthly"));
     const yearlyPrice = prices.find((price) => (price.productId === earlyAccessPlan?.id && price.nickname === "Early Access Yearly"));
+    const lifetimePrice = prices.find((price) => (price.productId === earlyAccessPlan?.id && price.nickname === "Early Access Lifetime"));
 
     return (
         <div role="tablist" className="tabs tabs-lifted">
@@ -27,7 +28,7 @@ export default async function Pricing() {
           defaultChecked
         />
         <div role="tabpanel" className="tab-content bg-base-100 border-base-300 rounded-box p-6">
-          <div className="grid md:grid-cols-2 gap-8 max-w-xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-xl mx-auto">
                 <PricingCard
                 name={monthlyPrice?.nickname || 'Base'}
                 price={monthlyPrice?.unitAmount || 800}
@@ -53,6 +54,18 @@ export default async function Pricing() {
                 ]}
                 priceId={yearlyPrice?.id}
                 />
+                <PricingCard
+                name={lifetimePrice?.nickname || 'Plus'}
+                price={lifetimePrice?.unitAmount || 1200}
+                interval={lifetimePrice?.interval}
+                trialDays={lifetimePrice?.trialPeriodDays}
+                features={[
+                    'Every features, forever',
+                    'No recurring payments',
+                    'Access to exclusive community with priority support',
+                ]}
+                priceId={lifetimePrice?.id}
+                />
           </div>
         </div>
 
@@ -66,11 +79,11 @@ export default async function Pricing() {
             <h3 className='w-full text-center text-xl text-primary'>
                 Coming soon...
             </h3>
-            <div className="grid md:grid-cols-2 gap-8 max-w-xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-8 max-w-xl mx-auto">
                 <PricingCard
                 name={"Family Monthly"}
-                price={2500}
-                interval={'month'}
+                price={500}
+                interval={'month per user'}
                 trialDays={31}
                 features={[
                     'Unlimited Ingredients, Meals and Shopping Lists',
@@ -80,12 +93,22 @@ export default async function Pricing() {
                 />
                 <PricingCard
                 name={"Family Yearly"}
-                price={24000}
-                interval={'year'}
+                price={4800}
+                interval={'year per user'}
                 trialDays={31}
                 features={[
                     'All Monthly features',
                     '2 months free',
+                ]}
+                disabled={true}
+                />
+                <PricingCard
+                name={"Family Lifetime"}
+                price={10800}
+                interval={'lifetime per user'}
+                features={[
+                  'Every features, forever',
+                  'No recurring payments',
                 ]}
                 disabled={true}
                 />
