@@ -209,7 +209,6 @@ export const toggleIngredient = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
         let isToggled = await isIngredientToggled(Number(data.idIngredient), Number(data.idMeal), Number(data.idShoppingList), Number(data.mealOrder));
-        console.log(isToggled);
 
         if (isToggled) { 
             await Promise.all([
@@ -251,7 +250,6 @@ const deleteIngredientSchema = z.object({
 export const deleteIngredient = validatedActionWithUser(
     deleteIngredientSchema,
     async (data: z.infer<typeof deleteIngredientSchema>, _, user) => {
-        console.log("Ingredient deletion...");
         const team = await getTeamForUser(user.id);
         if (!team) {
             throw new Error('User does not belong to a team');

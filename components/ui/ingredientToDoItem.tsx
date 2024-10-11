@@ -20,7 +20,6 @@ export default function Ingredient({ingredient, mealId, shoppingListId, isIngred
             pending ? !state.isToggled : state.isToggled 
         ) : isIngredientToggled
     );
-    console.log(state.isToggled);
 
     return (
         <form
