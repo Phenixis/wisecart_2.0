@@ -1,30 +1,12 @@
-import { getIngredientsOfMeal } from "@/app/dashboard/actions";
 import { Meal as MealType, User } from "@/lib/db/schema";
-import Ingredient from "./ingredient";
-import { User as UserIcon } from "lucide-react";
-import { Suspense } from "react";
-import MealSkeleton from "./../skeletons/mealSkeleton";
+import MealCard from "./mealCard";
+import MealShoppingList from "./mealShoppingList";
 
-export default async function Meal({ user, meal, ingredientMode, shoppingListId }: { user: User, meal: any /* MealType + mealOrder */, ingredientMode?: string, shoppingListId: number }) {
-
-    const ingredients = await getIngredientsOfMeal(user, meal.id);
-
-    return (
-        <Suspense fallback={<MealSkeleton />}>
-            <div className="py-2">
-                <div className="flex items-center">
-                    <h4 className="text-xl leading-none">{meal.name}</h4>
-                    <p className="text-sm ml-2">
-                        {meal.nbPersons}
-                    </p>
-                    <UserIcon size={16}/>
-                </div>
-                <div>
-                    {ingredients.map((ingredient) => (
-                        <Ingredient key={ingredient.id} ingredient={ingredient} mode={ingredientMode} mealId={meal.id} shoppingListId={shoppingListId} mealOrder={meal.order}/>
-                    ))}
-                </div>
-            </div>
-        </Suspense>
-    )
+export default async function Meal({ mode, user, meal, shoppingListId }: {mode?:string, user: User, meal: any /* MealType + mealOrder */, shoppingListId?: number }) {
+    switch (mode) {
+        case 'card':
+            return <MealCard user={user} meal={meal}/>;
+        default:
+            return <MealShoppingList user={user} meal={meal} shoppingListId={shoppingListId}/>;
+    }
 }
