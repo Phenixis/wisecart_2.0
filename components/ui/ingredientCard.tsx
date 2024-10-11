@@ -14,7 +14,7 @@ export default async function IngredientCard({ ingredient, isCreationDateVisible
     }
 
     return (
-        <div className="bg-white shadow-md rounded-lg p-2 w-fit sm:w-[29%] rounded-xl mb-2 mr-2 group">
+        <div className="bg-white shadow-md rounded-lg p-2 w-fit rounded-xl mb-2 mr-2 group">
             <div className="flex items-center justify-between space-x-2">
                 <h3 className="text-lg font-semibold text-gray-700">{ingredient.name}</h3>
                 { isEditPossible ? 
