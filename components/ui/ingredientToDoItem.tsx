@@ -16,28 +16,33 @@ export default function Ingredient({ingredient, mealId, shoppingListId, isIngred
     }
     const [state, formAction, pending] = useActionState<ActionState, FormData>(toggleIngredient, { error: '' });
     const ingredientCompletion = (
-        state.isToggled != undefined ? (
+        state.isToggled !== undefined ? (
             pending ? !state.isToggled : state.isToggled 
         ) : isIngredientToggled
     );
     console.log(state.isToggled);
 
     return (
-        <div
-            className={`flex items-center space-x-1 text-sm ${ingredientCompletion ? 'line-through' : ''}`}>
-            <form action={formAction}>
-                <input className='hidden' name="idIngredient" type="number" value={ingredient.id} readOnly/>
-                <input className='hidden' name="idMeal" type="number" value={mealId} readOnly/>
-                <input className='hidden' name="idShoppingList" type="number" value={shoppingListId} readOnly/>
-                <input className='hidden' name="mealOrder" type="number" value={mealOrder} readOnly/>
-                <button
-                    type="submit"
-                    className={`p-2 my-1 size-1 border border-neutral rounded-full ${ingredientCompletion ? 'bg-primary lg:hover:bg-transparent' : 'lg:hover:bg-primary'} `}
-                />
-            </form>
-            <p className="leading-none">
+        <form
+            className={`flex items-center space-x-1 text-sm ${ingredientCompletion ? 'line-through' : ''}`}
+            action={formAction}
+        >
+            <input className='hidden' name="idIngredient" type="number" value={ingredient.id} readOnly/>
+            <input className='hidden' name="idMeal" type="number" value={mealId} readOnly/>
+            <input className='hidden' name="idShoppingList" type="number" value={shoppingListId} readOnly/>
+            <input className='hidden' name="mealOrder" type="number" value={mealOrder} readOnly/>
+            <button
+                type="submit"
+                id={`submitBtn${ingredient.id}${mealId}${shoppingListId}${mealOrder}`}
+                name={`submitBtn${ingredient.id}${mealId}${shoppingListId}${mealOrder}`}
+                className={`p-2 my-1 size-1 border border-neutral rounded-full ${ingredientCompletion ? 'bg-primary lg:hover:bg-transparent' : 'lg:hover:bg-primary'} `}
+            />
+            <label
+                htmlFor={`submitBtn${ingredient.id}${mealId}${shoppingListId}${mealOrder}`}
+                className="leading-none"
+            >
                 {ingredient.name} : {ingredient.quantity} {ingredient.unit}
-            </p>
-        </div>
+            </label>
+        </form>
     )
 }
