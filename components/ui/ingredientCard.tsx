@@ -14,17 +14,17 @@ export default async function IngredientCard({ ingredient, isCreationDateVisible
     }
 
     return (
-        <div className="bg-white shadow-md rounded-lg p-2 w-[29%] rounded-xl mb-2 mr-2 group">
-            <div className="flex items-center justify-between">
+        <div className="bg-white shadow-md rounded-lg p-2 w-fit sm:w-[29%] rounded-xl mb-2 mr-2 group">
+            <div className="flex items-center justify-between space-x-2">
                 <h3 className="text-lg font-semibold text-gray-700">{ingredient.name}</h3>
                 { isEditPossible ? 
-                <div className="hidden group-hover:block">
+                <div className="sm:hidden sm:group-hover:block">
                     <EditPopup ingredient={ingredient} />
                 </div>
                 : '' }
             </div>
-            { isCreationDateVisible ? <p className="text-xs">Created by {user.name} the {ingredient.createdAt.toLocaleDateString()}</p> : '' }
-            { isLastUpdateDateVisible ? <p className="text-xs">Last update : {ingredient.updatedAt.toLocaleDateString()}</p> : '' }
+            { isCreationDateVisible ? <p className="text-xs hidden sm:block">Created by {user.name} the {ingredient.createdAt.toLocaleDateString()}</p> : '' }
+            { isLastUpdateDateVisible ? <p className="text-xs hidden sm:block">Last update : {ingredient.updatedAt.toLocaleDateString()}</p> : '' }
         </div>
     )
 }
