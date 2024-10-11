@@ -82,6 +82,22 @@ export async function updateTeamSubscription(
     .where(eq(teams.id, teamId));
 }
 
+export async function updateTeamOneTimePayment(
+  teamId: number,
+  paymentData: {
+    stripePaymentIntentId: string;
+    paymentStatus: string;
+  }
+) {
+  await db
+    .update(teams)
+    .set({
+      ...paymentData,
+      updatedAt: new Date(),
+    })
+    .where(eq(teams.id, teamId));
+}
+
 export async function getUserWithTeam(userId: number) {
   const result = await db
     .select({
@@ -152,14 +168,18 @@ export async function getTeamForUser(userId: number) {
   return result?.teamMembers[0]?.team || null;
 }
 
-export async function getTeamSubscriptionStatus(userId: number) {
+export async function getTeamPaymentStatus(userId: number) {
   const team = await getTeamForUser(userId);
   
   if (!team) {
     return null;
+  } else if (team.subscriptionStatus) {
+    return team.subscriptionStatus;
+  } else if (team.paymentStatus) {
+    return team.paymentStatus;
+  } else {
+    return null;
   }
-
-  return team.subscriptionStatus;
 }
 
 /* Une commande qui renvoie l'entièreté des ingrédients d'une liste de courses donnée en faisant la somme des mêmes ingrédients. */

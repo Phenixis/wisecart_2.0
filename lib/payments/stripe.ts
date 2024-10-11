@@ -5,6 +5,7 @@ import {
   getTeamByStripeCustomerId,
   getUser,
   updateTeamSubscription,
+  updateTeamOneTimePayment,
 } from '@/lib/db/queries';
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -35,15 +36,17 @@ export async function createCheckoutSession({
         quantity: 1,
       },
     ],
-    mode: 'subscription',
+    mode: price?.interval !== undefined ? 'subscription' : 'payment',
     success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.BASE_URL}/pricing`,
     customer: team.stripeCustomerId || undefined,
     client_reference_id: user.id.toString(),
+    customer_creation: 'always',
+
     allow_promotion_codes: true,
-    subscription_data: {
+    subscription_data: price?.interval !== undefined ?{
       trial_period_days: price?.trialPeriodDays || 14,
-    },
+    } : undefined,
   });
 
   redirect(session.url!);
@@ -146,11 +149,29 @@ export async function handleSubscriptionChange(
   }
 }
 
+export async function handleOneTimePayment(
+  session: Stripe.Checkout.Session
+) {
+  const customerId = session.customer as string;
+  const paymentIntentId = session.payment_intent as string;
+
+  const team = await getTeamByStripeCustomerId(customerId);
+
+  if (!team) {
+    console.error('Team not found for Stripe customer:', customerId);
+    return;
+  }
+
+  await updateTeamOneTimePayment(team.id, {
+    stripePaymentIntentId: paymentIntentId,
+    paymentStatus: 'completed',
+  });
+}
+
 export async function getStripePrices() {
   const prices = await stripe.prices.list({
     expand: ['data.product'],
     active: true,
-    type: 'recurring',
   });
 
   return prices.data.map((price) => ({
