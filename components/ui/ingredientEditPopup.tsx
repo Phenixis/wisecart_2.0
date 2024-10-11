@@ -35,7 +35,7 @@ export default function EditPopup({ ingredient }: { ingredient: any }) {
                     className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
                     onClick={() => setIsOpen(false)}
                 >
-                    <div className='bg-white rounded-xl p-4 w-96 space-y-4'>
+                    <div className='bg-white rounded-xl p-4 sm:w-96 w-full space-y-4 h-fit'>
                         <div className='flex items-center justify-between'>
                             <div className='flex items-center justify-between space-x-1'>
                                 <ArrowLeft className="cursor-pointer" onClick={() => setIsOpen(false)} />
