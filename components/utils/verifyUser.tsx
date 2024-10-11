@@ -1,4 +1,4 @@
-import { getUser, getTeamSubscriptionStatus } from "@/lib/db/queries";
+import { getUser, getTeamPaymentStatus } from "@/lib/db/queries";
 import { redirect } from "next/navigation";
 
 export default async function verifyUser() {
@@ -6,8 +6,8 @@ export default async function verifyUser() {
     if (!user) {
         redirect('/sign-in');
     } else {
-        const teamSubscriptionStatus = await getTeamSubscriptionStatus(user.id);
-        if (teamSubscriptionStatus !== 'active' && teamSubscriptionStatus !== 'trialing') {
+        const teamPaymentStatus = await getTeamPaymentStatus(user.id);
+        if (teamPaymentStatus !== 'active' && teamPaymentStatus !== 'trialing' && teamPaymentStatus !== 'completed') {
             redirect('/pricing');
         }
     }
