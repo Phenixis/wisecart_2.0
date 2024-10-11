@@ -3,7 +3,7 @@ import IngredientListsSkeleton from "./skeletons/ingredientListsSkeleton";
 import { getAllIngredients } from "@/app/dashboard/actions";
 import { getUser } from "@/lib/db/queries";
 import { redirect } from "next/navigation";
-import Ingredient from "./ingredient";
+import Ingredient from "./ui/ingredient";
 
 export default async function IngredientLists({isCreationDateVisible, isLastUpdateDateVisible, isEditPossible} : {isCreationDateVisible ?: boolean, isLastUpdateDateVisible ?: boolean, isEditPossible ?: boolean}) {
     const user = await getUser();

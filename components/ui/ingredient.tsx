@@ -1,5 +1,5 @@
-import IngredientToDoItem from "./ui/ingredientToDoItem";
-import IngredientCard from "./ui/ingredientCard";
+import IngredientToDoItem from "./ingredientToDoItem";
+import IngredientCard from "./ingredientCard";
 import { isIngredientToggled as isIngredientToggledFunction } from "@/app/dashboard/actions";
 
 export default async function Ingredient({ingredient, mode, isCreationDateVisible, isLastUpdateDateVisible, isEditPossible, mealId, shoppingListId, mealOrder} : {ingredient: any, mode?: string, isCreationDateVisible?: boolean, isLastUpdateDateVisible?: boolean, isEditPossible?: boolean, mealId?: number, shoppingListId?: number, mealOrder?: number}) {
