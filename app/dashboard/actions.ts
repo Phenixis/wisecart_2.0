@@ -105,6 +105,7 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
             deletedAt: ingredients.deletedAt,
             unit: mealsIngredients.unit,
             quantity: sql`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
+            nbPersons: meals.nbPersons,
         })
         .from(ingredients)
         .innerJoin(mealsIngredients, eq(ingredients.id, mealsIngredients.ingredientId))
@@ -118,7 +119,8 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
         )
         .groupBy(
             ingredients.id,
-            mealsIngredients.unit
+            mealsIngredients.unit,
+            meals.nbPersons,
         );
 
     // return db
@@ -307,15 +309,19 @@ export async function getAllMeals(user: User) {
         .select({
             id: meals.id,
             name: meals.name,
+            description: meals.description,
+            nbPersons: meals.nbPersons,
             createdBy: meals.createdBy,
             teamId: meals.teamId,
             createdAt: meals.createdAt,
+            updatedAt: meals.updatedAt,
+            deletedAt: meals.deletedAt,
         })
         .from(meals)
         .where(
             and(
                 eq(meals.teamId, team.id),
-                isNotNull(meals.deletedAt),
+                isNull(meals.deletedAt),
             ),
         );
 };
