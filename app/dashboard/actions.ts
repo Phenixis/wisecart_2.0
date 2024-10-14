@@ -364,10 +364,10 @@ export async function getMealsOfShoppingList(user: User, shoppingListId: number)
 // Update a meal
 
 const updateMealSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
     name: z.string().min(1),
     description: z.string().optional(),
-    nbPersons: z.number().int().positive(),
+    nbPersons: z.string().regex(/^\d+$/),
 });
 
 export const updateMeal = validatedActionWithUser(
@@ -380,12 +380,14 @@ export const updateMeal = validatedActionWithUser(
 
         const newMeal: NewMeal = {
             ...data,
+            id : Number(data.id),
+            nbPersons: Number(data.nbPersons),
             createdBy: user.id,
             teamId: team.id,
         };
 
         await Promise.all([
-            db.update(meals).set(newMeal).where(eq(meals.id, data.id)),
+            db.update(meals).set(newMeal).where(eq(meals.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.UPDATE_MEAL),
         ]);
     },
