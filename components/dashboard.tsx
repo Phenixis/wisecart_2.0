@@ -20,7 +20,7 @@ export default async function Dashboard() {
             <h1 className="hidden text-2xl font-bold">Dashboard</h1>
             <Link key={"/dashboard/shopping-lists"} href={"/dashboard/shopping-lists"} passHref className="flex group">
                 <h2 className="text-xl font-bold">Latest shopping list</h2>
-                <ArrowUpRight size={16} className="hidden text-primary group-hover:block" />
+                <ArrowUpRight size={16} className="block text-primary sm:hidden sm:group-hover:block" />
             </Link>
             <div className="w-full flex justify-center">
             {shoppingList.map((list) => (
@@ -31,14 +31,14 @@ export default async function Dashboard() {
                 <div className="w-1/2">
                     <Link key={"/dashboard/meal-list"} href={"/dashboard/meal-list"} passHref className="flex group">
                         <h2 className="text-xl font-bold">Meal List</h2>
-                        <ArrowUpRight size={16} className="hidden text-primary group-hover:block" />
+                        <ArrowUpRight size={16} className="block text-primary sm:hidden sm:group-hover:block" />
                     </Link>
                     <MealList />
                 </div>
                 <div className="w-1/2">
                     <Link key={"/dashboard/ingredient-list"} href={"/dashboard/ingredient-list"} passHref className="flex group">
                         <h2 className="text-xl font-bold">Ingredient List</h2>
-                        <ArrowUpRight size={16} className="hidden text-primary group-hover:block" />
+                        <ArrowUpRight size={16} className="block text-primary sm:hidden sm:group-hover:block" />
                     </Link>
                     <IngredientLists isCreationDateVisible={false} isLastUpdateDateVisible={false} isEditPossible={false}/>
                 </div>
