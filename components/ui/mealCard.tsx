@@ -11,7 +11,7 @@ export default async function MealCard({ user, meal }: { user: User, meal: any /
 
     return (
         <Suspense fallback={<MealSkeleton />}>
-            <div className="bg-white shadow rounded-xl w-fit p-2 mb-4">
+            <div className="bg-white shadow rounded-xl w-fit p-2 mb-4 mr-4">
                 <div className="flex items-center">
                     <h4 className="text-xl leading-none">{meal.name}</h4>
                     <p className="text-sm ml-2">
