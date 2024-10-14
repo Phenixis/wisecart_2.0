@@ -7,7 +7,7 @@ import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
 import { updateIngredient, deleteIngredient } from '@/app/dashboard/actions';
 
-export default function EditPopup({ ingredient }: { ingredient: any }) {
+export default function IngredientEditPopup({ ingredient }: { ingredient: any }) {
     const [isOpen, setIsOpen] = useState(false);
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
         updateIngredient,

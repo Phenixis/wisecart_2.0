@@ -1,5 +1,5 @@
 import { getUserWithId } from "@/lib/db/queries";
-import EditPopup from "./ingredientEditPopup";
+import IngredientEditPopup from "./ingredientEditPopup";
 
 export default async function IngredientCard({ ingredient, isCreationDateVisible, isLastUpdateDateVisible, isEditPossible } : {ingredient : any, isCreationDateVisible ?: boolean, isLastUpdateDateVisible ?: boolean, isEditPossible ?: boolean}) {
     const user = (await getUserWithId(ingredient.createdBy)).at(0);
@@ -19,7 +19,7 @@ export default async function IngredientCard({ ingredient, isCreationDateVisible
                 <h3 className="text-lg font-semibold text-gray-700">{ingredient.name}</h3>
                 { isEditPossible ? 
                 <div className="sm:hidden sm:group-hover:block">
-                    <EditPopup ingredient={ingredient} />
+                    <IngredientEditPopup ingredient={ingredient} />
                 </div>
                 : '' }
             </div>
