@@ -22,9 +22,7 @@ export default async function MealCard({ user, meal, isEditPossible }: { user: U
                         <UserIcon size={16}/>
                     </div>
                     { isEditPossible ? 
-                    <div className="sm:hidden sm:group-hover:block">
-                        <MealEditPopup key={meal.id} meal={meal} />
-                    </div>
+                    <MealEditPopup key={meal.id} meal={meal} ingredients={ingredients} />
                     : '' }
                 </div>
                 <p className="text-sm text-gray-500">{meal.description}</p>
