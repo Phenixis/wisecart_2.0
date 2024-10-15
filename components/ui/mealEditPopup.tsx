@@ -7,7 +7,7 @@ import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
 import { updateMeal, deleteMeal } from '@/app/dashboard/actions';
 
-export default function MealEditPopup({ meal, ingredients }: { meal: any, ingredients: any}) {
+export default function MealEditPopup({ meal, ingredients }: { meal: any, ingredients: any }) {
     const [isOpen, setIsOpen] = useState(false);
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
         updateMeal,
@@ -18,9 +18,18 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
         { error: '' }
     );
     const [hasChanged, setHasChanged] = useState(false);
-    const [hasNameChanged, setHasNameChanged] = useState(false);
-    const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false);
-    const [hasNbPersonsChanged, setHasNbPersonsChanged] = useState(false);
+
+    const initialValues = {
+        name: meal.name,
+        description: meal.description,
+        nbPersons: meal.nbPersons,
+        ingredients: ingredients.map((ingredient: any) => ({
+            quantity: ingredient.quantity / ingredient.nbPersons,
+            unit: ingredient.unit,
+        })),
+    };
+
+    const [currentValues, setCurrentValues] = useState(initialValues);
 
     useEffect(() => {
         if (state?.success || deleteState?.success) {
@@ -28,19 +37,29 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
         }
     }, [state, deleteState]);
 
-    function verifyChanges() {
-        // Faire une fonction qui vérifie si une valeur a changée dans le formulaire
-        if (hasNameChanged) {
-            console.log('Name has changed');
-        } else if (hasDescriptionChanged) {
-            console.log('Description has changed');
-        } else if (hasNbPersonsChanged) {
-            console.log('NbPersons has changed');
-        } else {
-            console.log('Nothing has changed : hasNameChanged = ' + hasNameChanged + ', hasDescriptionChanged = ' + hasDescriptionChanged + ', hasNbPersonsChanged = ' + hasNbPersonsChanged);
-        }
-        setHasChanged(hasNameChanged || hasDescriptionChanged || hasNbPersonsChanged);
-    }
+    const handleInputChange = (field: string, value: any) => {
+        setCurrentValues((prevValues) => {
+            const newValues = { ...prevValues, [field]: value };
+            const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
+            setHasChanged(hasChanged);
+            return newValues;
+        });
+    };
+
+    const handleIngredientChange = (index: number, field: string, value: any) => {
+        setCurrentValues((prevValues) => {
+            const newIngredients = [...prevValues.ingredients];
+            newIngredients[index] = { ...newIngredients[index], [field]: value };
+            const newValues = { ...prevValues, ingredients: newIngredients };
+            const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
+            setHasChanged(hasChanged);
+            return newValues;
+        });
+    };
+
+    const validateInput = (value: any) => {
+        return value !== '';
+    };
 
     return (
         <>
@@ -52,7 +71,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                     className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
                     onClick={() => setIsOpen(false)}
                 >
-                    <div className='bg-white rounded-xl p-4 sm:w-96 w-full space-y-4 h-fit'>
+                    <div className='bg-white rounded-xl p-4 sm:w-96 w-full space-y-4 h-fit' onClick={(e) => e.stopPropagation()}>
                         <div className='flex items-center justify-between'>
                             <div className='flex items-center justify-between space-x-1'>
                                 <ArrowLeft className="cursor-pointer" onClick={() => setIsOpen(false)} />
@@ -96,14 +115,11 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                     placeholder={meal.name}
                                     defaultValue={meal.name}
                                     onChange={(e) => {
-                                            if (e.target.value !== meal.name && e.target.value !== '') { 
-                                                setHasNameChanged(true);
-                                            } else {
-                                                setHasNameChanged(false);
-                                            }
-                                            verifyChanges();
+                                        const value = e.target.value;
+                                        if (validateInput(value)) {
+                                            handleInputChange('name', value);
                                         }
-                                    }
+                                    }}
                                 />
                                 <label className="block text-sm font-semibold">Description</label>
                                 <Input
@@ -114,16 +130,13 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                     placeholder={meal.description}
                                     defaultValue={meal.description}
                                     onChange={(e) => {
-                                            if (e.target.value !== meal.description) {
-                                                setHasDescriptionChanged(true);
-                                            } else {
-                                                setHasDescriptionChanged(false);
-                                            }
-                                            verifyChanges();
+                                        const value = e.target.value;
+                                        if (validateInput(value)) {
+                                            handleInputChange('description', value);
                                         }
-                                    }
+                                    }}
                                 />
-                                <label className="block text-sm font-semibold">For</label>
+                                <label className="block text-sm font-semibold">Number of Persons</label>
                                 <Input
                                     id="nbPersons"
                                     name="nbPersons"
@@ -132,14 +145,11 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                     placeholder={meal.nbPersons}
                                     defaultValue={meal.nbPersons}
                                     onChange={(e) => {
-                                            if (e.target.value !== meal.nbPersons && Number.parseInt(e.target.value) !== 0) {
-                                                setHasNbPersonsChanged(true);
-                                            } else {
-                                                setHasNbPersonsChanged(false);
-                                            }
-                                            verifyChanges();
+                                        const value = e.target.value;
+                                        if (validateInput(value)) {
+                                            handleInputChange('nbPersons', value);
                                         }
-                                    }
+                                    }}
                                 />
                                 <label className="block text-sm font-semibold">Ingredients</label>
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -152,43 +162,52 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {ingredients.map((ingredient: any, index: number) => (
-                                            <tr key={index}>
+                                            <tr key={ingredient.id}>
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {ingredient.name}
-                                                </td>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
                                                     <Input
-                                                        id={`quantity${index}`}
-                                                        name={`quantity${index}`}
+                                                        id={`name_${ingredient.id}`}
+                                                        name={`name_${ingredient.id}`}
                                                         type="text"
-                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                                        placeholder="Quantity per person"
-                                                        defaultValue={ingredient.quantity / ingredient.nbPersons}
+                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm hover:bg-gray-100 cursor-pointer focus:bg-white"
+                                                        placeholder={ingredient.name}
+                                                        defaultValue={ingredient.name}
                                                         onChange={(e) => {
-                                                            if (Number(e.target.value) !== (ingredient.quantity / ingredient.nbPersons)) { 
-                                                                setHasChanged(true);
-                                                            } else {
-                                                                setHasChanged(false);
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'name', value);
                                                             }
-                                                            verifyChanges();
                                                         }}
                                                     />
                                                 </td>
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
                                                     <Input
-                                                        id={`unit_${index}`}
-                                                        name={`unit_${index}`}
+                                                        id={`quantity_${ingredient.id}`}
+                                                        name={`quantity_${ingredient.id}`}
+                                                        type="number"
+                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm hover:bg-gray-100 cursor-pointer focus:bg-white"
+                                                        placeholder={"" + (ingredient.quantity / ingredient.nbPersons)}
+                                                        defaultValue={ingredient.quantity / ingredient.nbPersons}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'quantity', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <Input
+                                                        id={`unit_${ingredient.id}`}
+                                                        name={`unit_${ingredient.id}`}
                                                         type="text"
-                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                                        placeholder="Unit"
+                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm hover:bg-gray-100 cursor-pointer focus:bg-white"
+                                                        placeholder={ingredient.unit}
                                                         defaultValue={ingredient.unit}
                                                         onChange={(e) => {
-                                                            if (e.target.value !== ingredient.unit && e.target.value !== '') { 
-                                                                setHasChanged(true);
-                                                            } else {
-                                                                setHasChanged(false);
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'unit', value);
                                                             }
-                                                            verifyChanges();
                                                         }}
                                                     />
                                                 </td>
