@@ -7,7 +7,7 @@ import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
 import { updateMeal, deleteMeal } from '@/app/dashboard/actions';
 
-export default function MealEditPopup({ meal }: { meal: any }) {
+export default function MealEditPopup({ meal, ingredients }: { meal: any, ingredients: any}) {
     const [isOpen, setIsOpen] = useState(false);
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
         updateMeal,
@@ -18,6 +18,9 @@ export default function MealEditPopup({ meal }: { meal: any }) {
         { error: '' }
     );
     const [hasChanged, setHasChanged] = useState(false);
+    const [hasNameChanged, setHasNameChanged] = useState(false);
+    const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false);
+    const [hasNbPersonsChanged, setHasNbPersonsChanged] = useState(false);
 
     useEffect(() => {
         if (state?.success || deleteState?.success) {
@@ -25,9 +28,23 @@ export default function MealEditPopup({ meal }: { meal: any }) {
         }
     }, [state, deleteState]);
 
+    function verifyChanges() {
+        // Faire une fonction qui vérifie si une valeur a changée dans le formulaire
+        if (hasNameChanged) {
+            console.log('Name has changed');
+        } else if (hasDescriptionChanged) {
+            console.log('Description has changed');
+        } else if (hasNbPersonsChanged) {
+            console.log('NbPersons has changed');
+        } else {
+            console.log('Nothing has changed : hasNameChanged = ' + hasNameChanged + ', hasDescriptionChanged = ' + hasDescriptionChanged + ', hasNbPersonsChanged = ' + hasNbPersonsChanged);
+        }
+        setHasChanged(hasNameChanged || hasDescriptionChanged || hasNbPersonsChanged);
+    }
+
     return (
         <>
-            <button onClick={() => setIsOpen(true)}>
+            <button className="sm:hidden sm:group-hover:block" onClick={() => setIsOpen(true)}>
                 <Pen size={16} className="text-primary" />
             </button>
             {isOpen ? (
@@ -76,14 +93,15 @@ export default function MealEditPopup({ meal }: { meal: any }) {
                                     name="name"
                                     type="text"
                                     className="appearance-none rounded-xl relative block w-full px-3 py-2  border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                    placeholder="Pizza"
+                                    placeholder={meal.name}
                                     defaultValue={meal.name}
                                     onChange={(e) => {
                                             if (e.target.value !== meal.name && e.target.value !== '') { 
-                                                setHasChanged(true);
+                                                setHasNameChanged(true);
                                             } else {
-                                                setHasChanged(false);
+                                                setHasNameChanged(false);
                                             }
+                                            verifyChanges();
                                         }
                                     }
                                 />
@@ -93,14 +111,15 @@ export default function MealEditPopup({ meal }: { meal: any }) {
                                     name="description"
                                     type="text"
                                     className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                    placeholder="A fresh Hawaiian pizza"
+                                    placeholder={meal.description}
                                     defaultValue={meal.description}
                                     onChange={(e) => {
-                                            if (e.target.value !== meal.description) { 
-                                                setHasChanged(true);
+                                            if (e.target.value !== meal.description) {
+                                                setHasDescriptionChanged(true);
                                             } else {
-                                                setHasChanged(false);
+                                                setHasDescriptionChanged(false);
                                             }
+                                            verifyChanges();
                                         }
                                     }
                                 />
@@ -110,17 +129,73 @@ export default function MealEditPopup({ meal }: { meal: any }) {
                                     name="nbPersons"
                                     type="number"
                                     className="appearance-none rounded-xl relative block w-full px-3 py-2  border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                    placeholder="4"
+                                    placeholder={meal.nbPersons}
                                     defaultValue={meal.nbPersons}
                                     onChange={(e) => {
-                                            if (e.target.value !== meal.nbPersons && Number.parseInt(e.target.value) !== 0) { 
-                                                setHasChanged(true);
+                                            if (e.target.value !== meal.nbPersons && Number.parseInt(e.target.value) !== 0) {
+                                                setHasNbPersonsChanged(true);
                                             } else {
-                                                setHasChanged(false);
+                                                setHasNbPersonsChanged(false);
                                             }
+                                            verifyChanges();
                                         }
                                     }
                                 />
+                                <label className="block text-sm font-semibold">Ingredients</label>
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity per person</th>
+                                            <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {ingredients.map((ingredient: any, index: number) => (
+                                            <tr key={index}>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {ingredient.name}
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <Input
+                                                        id={`quantity${index}`}
+                                                        name={`quantity${index}`}
+                                                        type="text"
+                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                                                        placeholder="Quantity per person"
+                                                        defaultValue={ingredient.quantity / ingredient.nbPersons}
+                                                        onChange={(e) => {
+                                                            if (Number(e.target.value) !== (ingredient.quantity / ingredient.nbPersons)) { 
+                                                                setHasChanged(true);
+                                                            } else {
+                                                                setHasChanged(false);
+                                                            }
+                                                            verifyChanges();
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <Input
+                                                        id={`unit_${index}`}
+                                                        name={`unit_${index}`}
+                                                        type="text"
+                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                                                        placeholder="Unit"
+                                                        defaultValue={ingredient.unit}
+                                                        onChange={(e) => {
+                                                            if (e.target.value !== ingredient.unit && e.target.value !== '') { 
+                                                                setHasChanged(true);
+                                                            } else {
+                                                                setHasChanged(false);
+                                                            }
+                                                            verifyChanges();
+                                                        }}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                             {state?.error && (
                                 <div className="text-red-500 text-sm">{state.error}</div>
