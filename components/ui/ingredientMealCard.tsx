@@ -18,9 +18,7 @@ export default async function IngredientMealCard({ ingredient, isCreationDateVis
             <div className="flex items-center justify-between space-x-2">
                 <h3 className="text-lg font-semibold text-gray-700">{ingredient.name}</h3>
                 { isEditPossible ? 
-                <div className="sm:hidden sm:group-hover:block">
-                    <EditPopup ingredient={ingredient} />
-                </div>
+                <EditPopup ingredient={ingredient} />
                 : '' }
             </div>
             <p>Quantity per person : {ingredient.quantity / ingredient.nbPersons} {ingredient.unit}</p>

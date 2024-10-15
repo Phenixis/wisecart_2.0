@@ -27,7 +27,7 @@ export default function IngredientEditPopup({ ingredient }: { ingredient: any })
 
     return (
         <>
-            <button onClick={() => setIsOpen(true)}>
+            <button className="sm:hidden sm:group-hover:block" onClick={() => setIsOpen(true)}>
                 <Pen size={16} className="text-primary" />
             </button>
             {isOpen ? (
