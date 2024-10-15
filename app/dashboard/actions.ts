@@ -104,7 +104,7 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
             updatedAt: ingredients.updatedAt,
             deletedAt: ingredients.deletedAt,
             unit: mealsIngredients.unit,
-            quantity: sql`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
+            quantity: sql<number>`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
             nbPersons: meals.nbPersons,
         })
         .from(ingredients)
