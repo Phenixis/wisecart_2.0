@@ -393,6 +393,40 @@ export const updateMeal = validatedActionWithUser(
     },
 );
 
+const updateIngredientOfMealSchema = z.object({
+    mealId: z.string().regex(/^\d+$/),
+    ingredientId: z.string().regex(/^\d+$/),
+    quantity_per_person: z.string().regex(/^\d+$/),
+    unit: z.string().min(1),
+});
+
+export const updateIngredientOfMeal = validatedActionWithUser(
+    updateIngredientOfMealSchema,
+    async (data: z.infer<typeof updateIngredientOfMealSchema>, _, user) => {
+        const team = await getTeamForUser(user.id);
+        if (!team) {
+            throw new Error('User does not belong to a team');
+        }
+
+        const newIngredientOfMeal = {
+            quantity_per_person: Number(data.quantity_per_person),
+            unit: data.unit,
+        };
+
+        await Promise.all([
+            db.update(mealsIngredients)
+            .set(newIngredientOfMeal)
+            .where(
+                and(
+                    eq(mealsIngredients.mealId, Number(data.mealId)),
+                    eq(mealsIngredients.ingredientId, Number(data.ingredientId)),
+                ),
+            ),
+            logActivity(team.id, user.id, ActivityType.UPDATE_MEAL),
+        ]);
+    },
+);
+
 // Add an ingredient to a meal
 
 const addIngredientToMealSchema = z.object({
