@@ -5,12 +5,52 @@ import { useState, useActionState, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
-import { updateMeal, deleteMeal } from '@/app/dashboard/actions';
+import { updateMeal, deleteMeal, updateIngredient } from '@/app/dashboard/actions';
 
 export default function MealEditPopup({ meal, ingredients }: { meal: any, ingredients: any }) {
+
+    const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
+        const updatedMeal = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            nbPersons: formData.get('nbPersons'),
+        };
+
+        const mealChanged = updatedMeal.name !== initialValues.name ||
+            updatedMeal.description !== initialValues.description ||
+            updatedMeal.nbPersons !== initialValues.nbPersons;
+
+        console.log("meal changed ? : " + mealChanged);
+        if (mealChanged) {
+            return await updateMeal(state, formData);
+        }
+
+        const updatedIngredients = ingredients.map((ingredient: any, index: number) => ({
+            name: formData.get(`name_${ingredient.id}`),
+            quantity: formData.get(`quantity_${ingredient.id}`),
+            unit: formData.get(`unit_${ingredient.id}`),
+        }));
+
+        for (let i = 0; i < updatedIngredients.length; i++) {
+            const ingredientChanged = updatedIngredients[i].name !== initialValues.ingredients[i].name ||
+                updatedIngredients[i].quantity !== initialValues.ingredients[i].quantity ||
+                updatedIngredients[i].unit !== initialValues.ingredients[i].unit;
+            
+            console.log("ingredient " + updatedIngredients[i].id + " changed ? : " + mealChanged);
+            if (ingredientChanged) {
+                const ingredientFormData = new FormData();
+                ingredientFormData.append('id', ingredients[i].id);
+                ingredientFormData.append('name', updatedIngredients[i].name);
+                ingredientFormData.append('quantity', updatedIngredients[i].quantity);
+                ingredientFormData.append('unit', updatedIngredients[i].unit);
+                return await updateIngredient(state, ingredientFormData);
+            }
+        }
+    };
+
     const [isOpen, setIsOpen] = useState(false);
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
-        updateMeal,
+        handleUpdateMeal,
         { error: '' }
     );
     const [deleteState, deleteAction, deletePending] = useActionState<ActionState, FormData>(
@@ -22,10 +62,12 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
     const initialValues = {
         name: meal.name,
         description: meal.description,
-        nbPersons: meal.nbPersons,
+        nbPersons: "" + meal.nbPersons,
         ingredients: ingredients.map((ingredient: any) => ({
-            quantity: ingredient.quantity / ingredient.nbPersons,
-            unit: ingredient.unit,
+            id: ingredient.id,
+            name: ingredient.name,
+            quantity: "" + ingredient.quantity / ingredient.nbPersons,
+            unit: "" + ingredient.unit,
         })),
     };
 
@@ -39,7 +81,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
 
     const handleInputChange = (field: string, value: any) => {
         setCurrentValues((prevValues) => {
-            const newValues = { ...prevValues, [field]: value };
+            const newValues = { ...prevValues, [field]: "" + value };
             const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
             setHasChanged(hasChanged);
             return newValues;
@@ -49,8 +91,9 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
     const handleIngredientChange = (index: number, field: string, value: any) => {
         setCurrentValues((prevValues) => {
             const newIngredients = [...prevValues.ingredients];
-            newIngredients[index] = { ...newIngredients[index], [field]: value };
+            newIngredients[index] = { ...newIngredients[index], [field]: "" + value };
             const newValues = { ...prevValues, ingredients: newIngredients };
+            // PROBLEME ICI : Les nouvelles valeurs ne contiennent pas l'identifiant de l'ingrédient
             const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
             setHasChanged(hasChanged);
             return newValues;
@@ -71,7 +114,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                     className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
                     onClick={() => setIsOpen(false)}
                 >
-                    <div className='bg-white rounded-xl p-4 sm:w-96 w-full space-y-4 h-fit' onClick={(e) => e.stopPropagation()}>
+                    <div className='bg-white rounded-xl p-4 w-full sm:w-fit space-y-4 h-fit' onClick={(e) => e.stopPropagation()}>
                         <div className='flex items-center justify-between'>
                             <div className='flex items-center justify-between space-x-1'>
                                 <ArrowLeft className="cursor-pointer" onClick={() => setIsOpen(false)} />
@@ -100,11 +143,11 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                             </form>
                         </div>
                         <form
-                            className='space-y-2'
+                            className='space-y-2 w-full max-w-fit'
                             onClick={(e) => e.stopPropagation()}
                             action={formAction}
                         >
-                            <div>
+                            <div className='w-full max-w-fit'>
                                 <input className='hidden' name="id" type="number" value={meal.id} />
                                 <label className="block text-sm font-semibold">Name</label>
                                 <Input
@@ -140,8 +183,10 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                 <Input
                                     id="nbPersons"
                                     name="nbPersons"
-                                    type="number"
+                                    type="text"
                                     className="appearance-none rounded-xl relative block w-full px-3 py-2  border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                                    pattern="\d+"
+                                    title='Only numbers are allowed'
                                     placeholder={meal.nbPersons}
                                     defaultValue={meal.nbPersons}
                                     onChange={(e) => {
@@ -163,12 +208,19 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {ingredients.map((ingredient: any, index: number) => (
                                             <tr key={ingredient.id}>
+                                                <input
+                                                    id={`id_${ingredient.id}`}
+                                                    name={`id_${ingredient.id}`}
+                                                    type="text"
+                                                    className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary hidden"
+                                                    defaultValue={ingredient.id}
+                                                />
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    <Input
+                                                    <input
                                                         id={`name_${ingredient.id}`}
                                                         name={`name_${ingredient.id}`}
                                                         type="text"
-                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm hover:bg-gray-100 cursor-pointer focus:bg-white"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                         placeholder={ingredient.name}
                                                         defaultValue={ingredient.name}
                                                         onChange={(e) => {
@@ -180,13 +232,15 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                                     />
                                                 </td>
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
-                                                    <Input
+                                                    <input
                                                         id={`quantity_${ingredient.id}`}
                                                         name={`quantity_${ingredient.id}`}
-                                                        type="number"
-                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm hover:bg-gray-100 cursor-pointer focus:bg-white"
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        pattern="\d+"
+                                                        title='Only numbers are allowed'
                                                         placeholder={"" + (ingredient.quantity / ingredient.nbPersons)}
-                                                        defaultValue={ingredient.quantity / ingredient.nbPersons}
+                                                        defaultValue={`${ingredient.quantity / ingredient.nbPersons}`}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
                                                             if (validateInput(value)) {
@@ -196,11 +250,11 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                                     />
                                                 </td>
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
-                                                    <Input
+                                                    <input
                                                         id={`unit_${ingredient.id}`}
                                                         name={`unit_${ingredient.id}`}
                                                         type="text"
-                                                        className="appearance-none rounded-xl relative block w-full px-3 py-2 border-neutral placeholder:italic placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm hover:bg-gray-100 cursor-pointer focus:bg-white"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                         placeholder={ingredient.unit}
                                                         defaultValue={ingredient.unit}
                                                         onChange={(e) => {
