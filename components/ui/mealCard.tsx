@@ -22,7 +22,7 @@ export default async function MealCard({ user, meal, isEditPossible }: { user: U
                         <UserIcon size={16}/>
                     </div>
                     { isEditPossible ? 
-                    <MealEditPopup key={meal.id} meal={meal} ingredients={ingredients} />
+                    <MealEditPopup key={meal.id} user={user} meal={meal} ingredients={ingredients} />
                     : '' }
                 </div>
                 <p className="text-sm text-gray-500">{meal.description}</p>
