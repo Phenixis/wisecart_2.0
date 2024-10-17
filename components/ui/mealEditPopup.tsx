@@ -1,13 +1,15 @@
 'use client';
 
 import { ArrowLeft, Loader2, Pen, Plus, Trash, X } from 'lucide-react';
+import { useDebounce } from 'use-debounce';
 import { useState, useActionState, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
-import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal } from '@/app/dashboard/actions';
+import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal, fetchAllIngredients } from '@/app/dashboard/actions';
+import { User } from '@/lib/db/schema';
 
-export default function MealEditPopup({ meal, ingredients }: { meal: any, ingredients: any }) {
+export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
         const updatedMeal = {
             name: formData.get('name'),
@@ -63,6 +65,20 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
         setIsOpen(false);
     };
 
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery] = useDebounce(searchQuery, 300);
+    const [suggestedIngredients, setSuggestedIngredients] = useState<{ name: string }[]>([]);
+
+    useEffect(() => {
+        if (debouncedQuery) {
+            fetchAllIngredients(user, debouncedQuery).then((data) => {
+                setSuggestedIngredients(data);
+            });
+        } else {
+            setSuggestedIngredients([]);
+        }
+    }, [debouncedQuery]);
+
     const [isOpen, setIsOpen] = useState(false);
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
         handleUpdateMeal,
@@ -113,6 +129,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
             return newValues;
         });
     };
+    
 
     const validateInput = (value: any) => {
         return value !== '';
@@ -282,6 +299,62 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                                 </td>
                                             </tr>
                                         ))}
+                                        <tr>
+                                            <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                <input
+                                                    id="new_ingredient_name"
+                                                    name="new_ingredient_name"
+                                                    type="text"
+                                                    className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                    placeholder="New Ingredient Name"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setSearchQuery(value);
+                                                        if (validateInput(value)) {
+                                                            handleInputChange('newIngredientName', value);
+                                                        }
+                                                    }}
+                                                    list="ingredient-suggestions"
+                                                />
+                                                <datalist id="ingredient-suggestions">
+                                                    {suggestedIngredients.map((ingredient: any) => (
+                                                        <option key={ingredient.id} value={ingredient.name} />
+                                                    ))}
+                                                </datalist>
+                                            </td>
+                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                <input
+                                                    id="new_ingredient_quantity"
+                                                    name="new_ingredient_quantity"
+                                                    type="text"
+                                                    className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                    pattern="\d+"
+                                                    title='Only numbers are allowed'
+                                                    placeholder="Quantity per person"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (validateInput(value)) {
+                                                            handleInputChange('newIngredientQuantity', value);
+                                                        }
+                                                    }}
+                                                />
+                                            </td>
+                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                <input
+                                                    id="new_ingredient_unit"
+                                                    name="new_ingredient_unit"
+                                                    type="text"
+                                                    className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                    placeholder="Unit"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (validateInput(value)) {
+                                                            handleInputChange('newIngredientUnit', value);
+                                                        }
+                                                    }}
+                                                />
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
