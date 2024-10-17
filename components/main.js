@@ -9,7 +9,7 @@ export default function Main() {
     return (
         <main className="flex flex-col items-center space-y-8 w-[95%] max-w-[1024px] sm:w-[60%] m-auto">
             <Hero />
-            <div id="features" className="space-y-4 items-center">
+            <div id="features" className="space-y-4 items-center w-full">
                 <h2 className="text-3xl font-black text-secondary text-center">
                     Finding meals and making a shopping list is <span className="text-red-500">time-consuming</span>
                 </h2>

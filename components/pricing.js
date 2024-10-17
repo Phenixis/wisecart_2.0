@@ -28,7 +28,7 @@ export default async function Pricing() {
           defaultChecked
         />
         <div role="tabpanel" className="tab-content bg-base-100 border-base-300 rounded-box p-6">
-          <div className="grid md:grid-cols-3 gap-8 max-w-xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 mx-auto">
                 <PricingCard
                 name={monthlyPrice?.nickname || 'Base'}
                 price={monthlyPrice?.unitAmount || 800}
@@ -79,7 +79,7 @@ export default async function Pricing() {
             <h3 className='w-full text-center text-xl text-primary'>
                 Coming soon...
             </h3>
-            <div className="grid md:grid-cols-3 gap-8 max-w-xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-8 mx-auto">
                 <PricingCard
                 name={"Family Monthly"}
                 price={500}
