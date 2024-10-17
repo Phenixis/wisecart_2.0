@@ -97,7 +97,6 @@ export async function fetchAllIngredients(user: User, search: string) {
 
     return db
         .select({
-            id: ingredients.id,
             name: ingredients.name,
         })
         .from(ingredients)
