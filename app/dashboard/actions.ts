@@ -89,6 +89,28 @@ export async function getAllIngredients(user: User) {
         .orderBy(asc(ingredients.name));
 };
 
+export async function fetchAllIngredients(user: User, search: string) {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
+
+    return db
+        .select({
+            id: ingredients.id,
+            name: ingredients.name,
+        })
+        .from(ingredients)
+        .where(
+            and(
+                eq(ingredients.teamId, team.id),
+                isNull(ingredients.deletedAt),
+                sql`${ingredients.name} LIKE ${`%${search}%`}`,
+            ),
+        )
+        .orderBy(asc(ingredients.name));
+}
+
 export async function getIngredientsOfMeal(user: User, mealId: number) {
     const team = await getTeamForUser(user.id);
     if (!team) {
