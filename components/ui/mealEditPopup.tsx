@@ -11,6 +11,7 @@ import { User } from '@/lib/db/schema';
 
 export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
+        console.log('Updating meal...');
         const updatedMeal = {
             name: formData.get('name'),
             description: formData.get('description'),
@@ -34,8 +35,11 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
 
 
         for (let i = 0; i < updatedIngredients.length; i++) {
+            // TODO : Check if the ingredient is new or not
+            // If it is new, add it to the meal
+            // If it is not new, update the ingredient
             const ingredientChanged = updatedIngredients[i].name !== initialValues.ingredients[i].name;
-
+            
             if (ingredientChanged) {
                 const ingredientFormData = new FormData();
                 ingredientFormData.append('id', updatedIngredients[i].id);
@@ -59,6 +63,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             }
         }
         setIsOpen(false);
+        console.log('Meal updated');
     };
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -99,6 +104,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
     };
 
     const [currentValues, setCurrentValues] = useState(initialValues);
+    const [newIngredient, setNewIngredient] = useState({ name: '', quantity: '', unit: '' });
 
     useEffect(() => {
         if (state?.success || deleteState?.success) {
@@ -125,7 +131,28 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             return newValues;
         });
     };
-    
+
+    const handleNewIngredientChange = (field: string, value: any) => {
+        setNewIngredient((prevValues) => ({
+            ...prevValues,
+            [field]: value,
+        }));
+    };
+
+    const addNewIngredient = () => {
+        if (newIngredient.name && newIngredient.quantity && newIngredient.unit) {
+            const newIngredientWithId = {
+                ...newIngredient,
+                id: `new_${Date.now()}`, // Generate a temporary ID for the new ingredient
+            };
+            setCurrentValues((prevValues) => ({
+                ...prevValues,
+                ingredients: [...prevValues.ingredients, newIngredientWithId],
+            }));
+            setNewIngredient({ name: '', quantity: '', unit: '' });
+            setHasChanged(true);
+        }
+    };
 
     const validateInput = (value: any) => {
         return value !== '';
@@ -233,7 +260,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {ingredients.map((ingredient: any, index: number) => (
+                                        {currentValues.ingredients.map((ingredient: any, index: number) => (
                                             <tr key={ingredient.id}>
                                                 <input
                                                     id={`id_${ingredient.id}`}
@@ -267,8 +294,8 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                         pattern="\d+"
                                                         title='Only numbers are allowed'
-                                                        placeholder={"" + (ingredient.quantity / ingredient.nbPersons)}
-                                                        defaultValue={`${ingredient.quantity / ingredient.nbPersons}`}
+                                                        placeholder={`${Number(ingredient.quantity)}`}
+                                                        defaultValue={`${Number(ingredient.quantity)}`}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
                                                             if (validateInput(value)) {
@@ -303,11 +330,12 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                     type="text"
                                                     className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                     placeholder="New Ingredient Name"
+                                                    value={newIngredient.name}
                                                     onChange={(e) => {
                                                         const value = e.target.value;
                                                         setSearchQuery(value);
                                                         if (validateInput(value)) {
-                                                            handleInputChange('newIngredientName', value);
+                                                            handleNewIngredientChange('name', value);
                                                         }
                                                     }}
                                                     list="ingredient-suggestions"
@@ -327,10 +355,11 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                     pattern="\d+"
                                                     title='Only numbers are allowed'
                                                     placeholder="Quantity per person"
+                                                    value={newIngredient.quantity}
                                                     onChange={(e) => {
                                                         const value = e.target.value;
                                                         if (validateInput(value)) {
-                                                            handleInputChange('newIngredientQuantity', value);
+                                                            handleNewIngredientChange('quantity', value);
                                                         }
                                                     }}
                                                 />
@@ -342,13 +371,23 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                     type="text"
                                                     className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                     placeholder="Unit"
+                                                    value={newIngredient.unit}
                                                     onChange={(e) => {
                                                         const value = e.target.value;
                                                         if (validateInput(value)) {
-                                                            handleInputChange('newIngredientUnit', value);
+                                                            handleNewIngredientChange('unit', value);
                                                         }
                                                     }}
                                                 />
+                                            </td>
+                                            <td>
+                                                <Button
+                                                    type="button"
+                                                    className="rounded-xl text-white font-semibold"
+                                                    onClick={addNewIngredient}
+                                                >
+                                                    Add
+                                                </Button>
                                             </td>
                                         </tr>
                                     </tbody>
