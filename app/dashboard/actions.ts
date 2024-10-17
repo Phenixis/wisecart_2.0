@@ -122,30 +122,6 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
             mealsIngredients.unit,
             meals.nbPersons,
         );
-
-    // return db
-    //     .select({
-    //         id: ingredients.id,
-    //         name: ingredients.name,
-    //         createdBy: ingredients.createdBy,
-    //         teamId: ingredients.teamId,
-    //         createdAt: ingredients.createdAt,
-    //         updatedAt: ingredients.updatedAt,
-    //         deletedAt: ingredients.deletedAt,
-    //         quantity: sql`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
-    //         unit: mealsIngredients.unit,
-    //     })
-    //     .from(ingredients)
-    //     .innerJoin(mealsIngredients, eq(ingredients.id, mealsIngredients.ingredientId))
-    //     .innerJoin(meals, eq(mealsIngredients.mealId, meals.id))
-    //     .where(
-    //         and(
-    //             eq(ingredients.teamId, team.id),
-    //             isNull(ingredients.deletedAt),
-    //             eq(mealsIngredients.mealId, mealId),
-    //         ),
-    //     )
-    //     .groupBy(ingredients.id, mealsIngredients.id, meals.id);
 };
 
 // Update an ingredient

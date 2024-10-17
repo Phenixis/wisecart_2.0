@@ -5,10 +5,9 @@ import { useState, useActionState, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
-import { updateMeal, deleteMeal, updateIngredient } from '@/app/dashboard/actions';
+import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal } from '@/app/dashboard/actions';
 
 export default function MealEditPopup({ meal, ingredients }: { meal: any, ingredients: any }) {
-
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
         const updatedMeal = {
             name: formData.get('name'),
@@ -22,30 +21,46 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
 
         console.log("meal changed ? : " + mealChanged);
         if (mealChanged) {
-            return await updateMeal(state, formData);
+            await updateMeal(state, formData);
         }
 
-        const updatedIngredients = ingredients.map((ingredient: any, index: number) => ({
+        const updatedIngredients = ingredients.map((ingredient: any) => ({
+            id: formData.get(`id_${ingredient.id}`),
             name: formData.get(`name_${ingredient.id}`),
             quantity: formData.get(`quantity_${ingredient.id}`),
             unit: formData.get(`unit_${ingredient.id}`),
         }));
 
+        console.log(updatedIngredients);
+
         for (let i = 0; i < updatedIngredients.length; i++) {
-            const ingredientChanged = updatedIngredients[i].name !== initialValues.ingredients[i].name ||
-                updatedIngredients[i].quantity !== initialValues.ingredients[i].quantity ||
-                updatedIngredients[i].unit !== initialValues.ingredients[i].unit;
+            const ingredientChanged = updatedIngredients[i].name !== initialValues.ingredients[i].name;
             
-            console.log("ingredient " + updatedIngredients[i].id + " changed ? : " + mealChanged);
+            console.log("ingredient " + updatedIngredients[i].id + " changed ? : " + ingredientChanged);
             if (ingredientChanged) {
                 const ingredientFormData = new FormData();
-                ingredientFormData.append('id', ingredients[i].id);
+                ingredientFormData.append('id', updatedIngredients[i].id);
                 ingredientFormData.append('name', updatedIngredients[i].name);
                 ingredientFormData.append('quantity', updatedIngredients[i].quantity);
                 ingredientFormData.append('unit', updatedIngredients[i].unit);
-                return await updateIngredient(state, ingredientFormData);
+                await updateIngredient(state, ingredientFormData);
+                initialValues.ingredients[i] = updatedIngredients[i];
+            }
+
+            const ingredientMealChanged = updatedIngredients[i].quantity !== initialValues.ingredients[i].quantity || updatedIngredients[i].unit !== initialValues.ingredients[i].unit;
+            
+            console.log("ingredient " + updatedIngredients[i].id + " <-> Meal changed ? : " + ingredientMealChanged);
+            if (ingredientMealChanged) {
+                const ingredientMealFormData = new FormData();
+                ingredientMealFormData.append('mealId', meal.id);
+                ingredientMealFormData.append('ingredientId', updatedIngredients[i].id);
+                ingredientMealFormData.append('quantity_per_person', updatedIngredients[i].quantity);
+                ingredientMealFormData.append('unit', updatedIngredients[i].unit);
+                await updateIngredientOfMeal(state, ingredientMealFormData);
+                initialValues.ingredients[i] = updatedIngredients[i];
             }
         }
+        setIsOpen(false);
     };
 
     const [isOpen, setIsOpen] = useState(false);
@@ -93,7 +108,6 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
             const newIngredients = [...prevValues.ingredients];
             newIngredients[index] = { ...newIngredients[index], [field]: "" + value };
             const newValues = { ...prevValues, ingredients: newIngredients };
-            // PROBLEME ICI : Les nouvelles valeurs ne contiennent pas l'identifiant de l'ingrédient
             const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
             setHasChanged(hasChanged);
             return newValues;
@@ -148,7 +162,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                             action={formAction}
                         >
                             <div className='w-full max-w-fit'>
-                                <input className='hidden' name="id" type="number" value={meal.id} />
+                                <input className='hidden' id="id" name="id" type="number" value={meal.id} />
                                 <label className="block text-sm font-semibold">Name</label>
                                 <Input
                                     id="name"
@@ -214,13 +228,14 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                                     type="text"
                                                     className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary hidden"
                                                     defaultValue={ingredient.id}
+                                                    readOnly
                                                 />
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     <input
                                                         id={`name_${ingredient.id}`}
                                                         name={`name_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                         placeholder={ingredient.name}
                                                         defaultValue={ingredient.name}
                                                         onChange={(e) => {
@@ -236,7 +251,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                                         id={`quantity_${ingredient.id}`}
                                                         name={`quantity_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                         pattern="\d+"
                                                         title='Only numbers are allowed'
                                                         placeholder={"" + (ingredient.quantity / ingredient.nbPersons)}
@@ -254,7 +269,7 @@ export default function MealEditPopup({ meal, ingredients }: { meal: any, ingred
                                                         id={`unit_${ingredient.id}`}
                                                         name={`unit_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
                                                         placeholder={ingredient.unit}
                                                         defaultValue={ingredient.unit}
                                                         onChange={(e) => {
