@@ -21,7 +21,6 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             updatedMeal.description !== initialValues.description ||
             updatedMeal.nbPersons !== initialValues.nbPersons;
 
-        console.log("meal changed ? : " + mealChanged);
         if (mealChanged) {
             await updateMeal(state, formData);
         }
@@ -33,12 +32,10 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             unit: formData.get(`unit_${ingredient.id}`),
         }));
 
-        console.log(updatedIngredients);
 
         for (let i = 0; i < updatedIngredients.length; i++) {
             const ingredientChanged = updatedIngredients[i].name !== initialValues.ingredients[i].name;
-            
-            console.log("ingredient " + updatedIngredients[i].id + " changed ? : " + ingredientChanged);
+
             if (ingredientChanged) {
                 const ingredientFormData = new FormData();
                 ingredientFormData.append('id', updatedIngredients[i].id);
@@ -51,7 +48,6 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
 
             const ingredientMealChanged = updatedIngredients[i].quantity !== initialValues.ingredients[i].quantity || updatedIngredients[i].unit !== initialValues.ingredients[i].unit;
             
-            console.log("ingredient " + updatedIngredients[i].id + " <-> Meal changed ? : " + ingredientMealChanged);
             if (ingredientMealChanged) {
                 const ingredientMealFormData = new FormData();
                 ingredientMealFormData.append('mealId', meal.id);
