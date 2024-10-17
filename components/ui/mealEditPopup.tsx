@@ -260,7 +260,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {currentValues.ingredients.map((ingredient: any, index: number) => (
+                                        {ingredients.map((ingredient: any, index: number) => (
                                             <tr key={ingredient.id}>
                                                 <input
                                                     id={`id_${ingredient.id}`}
@@ -291,11 +291,11 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`quantity_${ingredient.id}`}
                                                         name={`quantity_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary focus:text-gray-900"
                                                         pattern="\d+"
                                                         title='Only numbers are allowed'
-                                                        placeholder={`${Number(ingredient.quantity)}`}
-                                                        defaultValue={`${Number(ingredient.quantity)}`}
+                                                        placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
+                                                        defaultValue={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
                                                             if (validateInput(value)) {
@@ -341,7 +341,6 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                     list="ingredient-suggestions"
                                                 />
                                                 <datalist id="ingredient-suggestions">
-                                                    {/* Stylised the datalist */}
                                                     {suggestedIngredients.map((ingredient: any) => (
                                                         <option key={ingredient.id} value={ingredient.name} />
                                                     ))}
