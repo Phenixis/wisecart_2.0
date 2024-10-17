@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { and, desc, eq, isNotNull, isNull, sql, max } from 'drizzle-orm';
+import { and, desc, asc, eq, isNotNull, isNull, sql, max } from 'drizzle-orm';
 import { db } from '@/lib/db/drizzle';
 import {
     meals,
@@ -85,7 +85,8 @@ export async function getAllIngredients(user: User) {
                 eq(ingredients.teamId, team.id),
                 isNull(ingredients.deletedAt),
             ),
-        );
+        )
+        .orderBy(asc(ingredients.name));
 };
 
 export async function getIngredientsOfMeal(user: User, mealId: number) {
@@ -121,7 +122,8 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
             ingredients.id,
             mealsIngredients.unit,
             meals.nbPersons,
-        );
+        )
+        .orderBy(asc(ingredients.name));
 };
 
 // Update an ingredient
@@ -299,7 +301,8 @@ export async function getAllMeals(user: User) {
                 eq(meals.teamId, team.id),
                 isNull(meals.deletedAt),
             ),
-        );
+        )
+        .orderBy(asc(meals.name));
 };
 
 export async function getMealsOfShoppingList(user: User, shoppingListId: number) {
@@ -334,7 +337,8 @@ export async function getMealsOfShoppingList(user: User, shoppingListId: number)
             meals.id,
             shoppingListsMealsIngredients.mealId,
             shoppingListsMealsIngredients.mealOrder,
-        );
+        )
+        .orderBy(asc(meals.name));
 };
 
 // Update a meal
