@@ -341,6 +341,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                     list="ingredient-suggestions"
                                                 />
                                                 <datalist id="ingredient-suggestions">
+                                                    {/* Stylised the datalist */}
                                                     {suggestedIngredients.map((ingredient: any) => (
                                                         <option key={ingredient.id} value={ingredient.name} />
                                                     ))}
