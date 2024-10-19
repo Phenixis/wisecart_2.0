@@ -12,6 +12,7 @@ import { User } from '@/lib/db/schema';
 export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
         console.log('Updating meal...');
+
         const updatedMeal = {
             name: formData.get('name'),
             description: formData.get('description'),
@@ -26,42 +27,8 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             await updateMeal(state, formData);
         }
 
-        const updatedIngredients = ingredients.map((ingredient: any) => ({
-            id: formData.get(`id_${ingredient.id}`),
-            name: formData.get(`name_${ingredient.id}`),
-            quantity: formData.get(`quantity_${ingredient.id}`),
-            unit: formData.get(`unit_${ingredient.id}`),
-        }));
+        // TODO
 
-
-        for (let i = 0; i < updatedIngredients.length; i++) {
-            // TODO : Check if the ingredient is new or not
-            // If it is new, add it to the meal
-            // If it is not new, update the ingredient
-            const ingredientChanged = updatedIngredients[i].name !== initialValues.ingredients[i].name;
-            
-            if (ingredientChanged) {
-                const ingredientFormData = new FormData();
-                ingredientFormData.append('id', updatedIngredients[i].id);
-                ingredientFormData.append('name', updatedIngredients[i].name);
-                ingredientFormData.append('quantity', updatedIngredients[i].quantity);
-                ingredientFormData.append('unit', updatedIngredients[i].unit);
-                await updateIngredient(state, ingredientFormData);
-                initialValues.ingredients[i] = updatedIngredients[i];
-            }
-
-            const ingredientMealChanged = updatedIngredients[i].quantity !== initialValues.ingredients[i].quantity || updatedIngredients[i].unit !== initialValues.ingredients[i].unit;
-            
-            if (ingredientMealChanged) {
-                const ingredientMealFormData = new FormData();
-                ingredientMealFormData.append('mealId', meal.id);
-                ingredientMealFormData.append('ingredientId', updatedIngredients[i].id);
-                ingredientMealFormData.append('quantity_per_person', updatedIngredients[i].quantity);
-                ingredientMealFormData.append('unit', updatedIngredients[i].unit);
-                await updateIngredientOfMeal(state, ingredientMealFormData);
-                initialValues.ingredients[i] = updatedIngredients[i];
-            }
-        }
         setIsOpen(false);
         console.log('Meal updated');
     };
@@ -283,7 +250,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`name_${ingredient.id}`}
                                                         name={`name_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.id) ? 'line-through text-gray-400' : ''}`}
                                                         placeholder={ingredient.name}
                                                         defaultValue={ingredient.name}
                                                         onChange={(e) => {
@@ -292,6 +259,13 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                                 handleIngredientChange(index, 'name', value);
                                                             }
                                                         }}
+                                                        readOnly={
+                                                            (deletedIngredients.includes(ingredient.id)) ? (
+                                                                true
+                                                            ) : (
+                                                                false
+                                                            )
+                                                        }
                                                     />
                                                 </td>
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
@@ -299,7 +273,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`quantity_${ingredient.id}`}
                                                         name={`quantity_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary focus:text-gray-900"
+                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.id) ? 'line-through text-gray-400' : ''}`}
                                                         pattern="\d+"
                                                         title='Only numbers are allowed'
                                                         placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
@@ -310,6 +284,13 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                                 handleIngredientChange(index, 'quantity', value);
                                                             }
                                                         }}
+                                                        readOnly={
+                                                            (deletedIngredients.includes(ingredient.id)) ? (
+                                                                true
+                                                            ) : (
+                                                                false
+                                                            )
+                                                        }
                                                     />
                                                 </td>
                                                 <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
@@ -317,7 +298,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`unit_${ingredient.id}`}
                                                         name={`unit_${ingredient.id}`}
                                                         type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.id) ? 'line-through text-gray-400' : ''}`}
                                                         placeholder={ingredient.unit}
                                                         defaultValue={ingredient.unit}
                                                         onChange={(e) => {
@@ -326,22 +307,41 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                                 handleIngredientChange(index, 'unit', value);
                                                             }
                                                         }}
+                                                        readOnly={
+                                                            (deletedIngredients.includes(ingredient.id)) ? (
+                                                                true
+                                                            ) : (
+                                                                false
+                                                            )
+                                                        }
                                                     />
                                                 </td>
                                                 <td>
                                                     <Button
                                                         type="button"
-                                                        className="rounded-xl text-red-500 font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent hover:border-red-500 hover:text-red-500 group"
-                                                        onClick={addNewIngredient}
+                                                        className={`rounded-xl ${deletedIngredients.includes(ingredient.id) ? "text-green-500" : "text-red-500"} font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent ${deletedIngredients.includes(ingredient.id) ? "hover:border-green-500 hover:text-green-500" : "hover:border-red-500 hover:text-red-500"} group`}
+                                                        onClick={(e) => {
+                                                            if (deletedIngredients.includes(ingredient.id)) {
+                                                                setDeletedIngredients((prevValues) => prevValues.filter((id) => id !== ingredient.id));
+                                                            } else {
+                                                                setDeletedIngredients((prevValues) => [...prevValues, ingredient.id]);
+                                                            }
+                                                        }}
                                                     >
-                                                        <Trash size={16}/>
+                                                        {
+                                                            deletedIngredients.includes(ingredient.id) ? (
+                                                                <Plus size={16}/>
+                                                            ) : (
+                                                                <Trash size={16}/>
+                                                            )
+                                                        }
                                                     </Button>
                                                 </td>
                                             </tr>
                                         ))}
                                         {newIngredients.map((ingredient: any, index: number) => (
                                             <tr key={`new_${ingredient.id}`}>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-green-900">
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-green-500">
                                                     <input
                                                         id={`new_name_${ingredient.id}`}
                                                         name={`new_name_${ingredient.id}`}
@@ -395,7 +395,9 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                     <Button
                                                         type="button"
                                                         className="rounded-xl text-red-500 font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent hover:border-red-500 hover:text-red-500 group"
-                                                        onClick={addNewIngredient}
+                                                        onClick={(e) => {
+                                                            setNewIngredients((prevValues) => prevValues.filter((_, i) => i !== index));
+                                                        }}
                                                     >
                                                         <Trash size={16}/>
                                                     </Button>
