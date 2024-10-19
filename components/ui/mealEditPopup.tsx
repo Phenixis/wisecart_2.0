@@ -107,23 +107,15 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
 
     const addNewIngredient = async () => {
         if (newIngredient.name && newIngredient.quantity && newIngredient.unit) {
-            const ingredientFormData = new FormData();
-            ingredientFormData.append('name', newIngredient.name);
-            ingredientFormData.append('quantity', newIngredient.quantity);
-            ingredientFormData.append('unit', newIngredient.unit);
+            newIngredients.push({
+                id: newIngredients.length,
+                name: newIngredient.name,
+                quantity: newIngredient.quantity,
+                unit: newIngredient.unit,
+            });
 
-            const createdIngredient = await createIngredient(user, ingredientFormData);
-            const ingredientMealFormData = new FormData();
-            ingredientMealFormData.append('mealId', meal.id);
-            ingredientMealFormData.append('ingredientId', createdIngredient.id);
-            ingredientMealFormData.append('quantity_per_person', newIngredient.quantity);
-            ingredientMealFormData.append('unit', newIngredient.unit);
-            await addIngredientToMeal(user, ingredientMealFormData);
-
-            setCurrentValues((prevValues) => ({
-                ...prevValues,
-                ingredients: [...prevValues.ingredients, createdIngredient],
-            }));
+            console.log(newIngredients);
+            // The new ingredient is in the array but doesnt show up in the table
 
             setNewIngredient({ name: '', quantity: '', unit: '' });
             setSearchQuery('');
@@ -141,6 +133,13 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
     const [hasChanged, setHasChanged] = useState(false);
     const [currentValues, setCurrentValues] = useState(initialValues);
     const [newIngredient, setNewIngredient] = useState({ name: '', quantity: '', unit: '' });
+    const newIngredients : {
+        id : number,
+        name : string,
+        quantity : string,
+        unit : string
+    }[] = [];
+    const [deletedIngredients, setDeletedIngredients] = useState<number[]>([]);
     
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
         handleUpdateMeal,
@@ -270,7 +269,140 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {ingredients.map((ingredient: any, index: number) => (
-                                            
+                                            <tr key={ingredient.id}>
+                                                <td className='hidden'>
+                                                    <input
+                                                        id={`id_${ingredient.id}`}
+                                                        name={`id_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary hidden"
+                                                        defaultValue={ingredient.id}
+                                                        readOnly
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    <input
+                                                        id={`name_${ingredient.id}`}
+                                                        name={`name_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        placeholder={ingredient.name}
+                                                        defaultValue={ingredient.name}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'name', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <input
+                                                        id={`quantity_${ingredient.id}`}
+                                                        name={`quantity_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary focus:text-gray-900"
+                                                        pattern="\d+"
+                                                        title='Only numbers are allowed'
+                                                        placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
+                                                        defaultValue={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'quantity', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <input
+                                                        id={`unit_${ingredient.id}`}
+                                                        name={`unit_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        placeholder={ingredient.unit}
+                                                        defaultValue={ingredient.unit}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'unit', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Button
+                                                        type="button"
+                                                        className="rounded-xl text-red-500 font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent hover:border-red-500 hover:text-red-500 group"
+                                                        onClick={addNewIngredient}
+                                                    >
+                                                        <Trash size={16}/>
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {newIngredients.map((ingredient: any, index: number) => (
+                                            <tr key={`new_${ingredient.id}`}>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    <input
+                                                        id={`new_name_${ingredient.id}`}
+                                                        name={`new_name_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        placeholder={ingredient.name}
+                                                        defaultValue={ingredient.name}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'name', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <input
+                                                        id={`new_quantity_${ingredient.id}`}
+                                                        name={`new_quantity_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary focus:text-gray-900"
+                                                        pattern="\d+"
+                                                        title='Only numbers are allowed'
+                                                        placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
+                                                        defaultValue={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'quantity', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    <input
+                                                        id={`new_unit_${ingredient.id}`}
+                                                        name={`new_unit_${ingredient.id}`}
+                                                        type="text"
+                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
+                                                        placeholder={ingredient.unit}
+                                                        defaultValue={ingredient.unit}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (validateInput(value)) {
+                                                                handleIngredientChange(index, 'unit', value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Button
+                                                        type="button"
+                                                        className="rounded-xl text-red-500 font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent hover:border-red-500 hover:text-red-500 group"
+                                                        onClick={addNewIngredient}
+                                                    >
+                                                        <Trash size={16}/>
+                                                    </Button>
+                                                </td>
+                                            </tr>
                                         ))}
                                         <tr>
                                             <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
