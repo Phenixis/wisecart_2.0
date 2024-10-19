@@ -107,12 +107,15 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
 
     const addNewIngredient = async () => {
         if (newIngredient.name && newIngredient.quantity && newIngredient.unit) {
-            newIngredients.push({
-                id: newIngredients.length,
-                name: newIngredient.name,
-                quantity: newIngredient.quantity,
-                unit: newIngredient.unit,
-            });
+            setNewIngredients((prevValues) => [
+                ...prevValues,
+                {
+                    id: newIngredients.length,
+                    name: newIngredient.name,
+                    quantity: newIngredient.quantity,
+                    unit: newIngredient.unit,
+                },
+            ]);
 
             console.log(newIngredients);
             // The new ingredient is in the array but doesnt show up in the table
@@ -133,12 +136,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
     const [hasChanged, setHasChanged] = useState(false);
     const [currentValues, setCurrentValues] = useState(initialValues);
     const [newIngredient, setNewIngredient] = useState({ name: '', quantity: '', unit: '' });
-    const newIngredients : {
-        id : number,
-        name : string,
-        quantity : string,
-        unit : string
-    }[] = [];
+    const [newIngredients, setNewIngredients] = useState<{ id: number, name: string, quantity: string, unit: string}[]>([]);
     const [deletedIngredients, setDeletedIngredients] = useState<number[]>([]);
     
     const [state, formAction, pending] = useActionState<ActionState, FormData>(
@@ -343,7 +341,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                         ))}
                                         {newIngredients.map((ingredient: any, index: number) => (
                                             <tr key={`new_${ingredient.id}`}>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-green-900">
                                                     <input
                                                         id={`new_name_${ingredient.id}`}
                                                         name={`new_name_${ingredient.id}`}
@@ -359,7 +357,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         }}
                                                     />
                                                 </td>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-green-500">
                                                     <input
                                                         id={`new_quantity_${ingredient.id}`}
                                                         name={`new_quantity_${ingredient.id}`}
@@ -367,8 +365,8 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary focus:text-gray-900"
                                                         pattern="\d+"
                                                         title='Only numbers are allowed'
-                                                        placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
-                                                        defaultValue={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
+                                                        placeholder={`${Number(ingredient.quantity)}`}
+                                                        defaultValue={`${Number(ingredient.quantity)}`}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
                                                             if (validateInput(value)) {
@@ -377,7 +375,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         }}
                                                     />
                                                 </td>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-green-500">
                                                     <input
                                                         id={`new_unit_${ingredient.id}`}
                                                         name={`new_unit_${ingredient.id}`}
