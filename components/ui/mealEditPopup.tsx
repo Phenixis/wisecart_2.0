@@ -1,12 +1,12 @@
 'use client';
 
-import { ArrowLeft, Loader2, Pen, Plus, Trash, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Pen, Plus, Trash} from 'lucide-react';
 import { useDebounce } from 'use-debounce';
 import { useState, useActionState, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
-import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal, fetchAllIngredients } from '@/app/dashboard/actions';
+import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal, fetchAllIngredients, createIngredient, addIngredientToMeal } from '@/app/dashboard/actions';
 import { User } from '@/lib/db/schema';
 
 export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
@@ -65,32 +65,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
         setIsOpen(false);
         console.log('Meal updated');
     };
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedQuery] = useDebounce(searchQuery, 300);
-    const [suggestedIngredients, setSuggestedIngredients] = useState<{ name: string }[]>([]);
-
-    useEffect(() => {
-        if (debouncedQuery) {
-            fetchAllIngredients(user, debouncedQuery).then((data) => {
-                setSuggestedIngredients(data);
-            });
-        } else {
-            setSuggestedIngredients([]);
-        }
-    }, [debouncedQuery]);
-
-    const [isOpen, setIsOpen] = useState(false);
-    const [state, formAction, pending] = useActionState<ActionState, FormData>(
-        handleUpdateMeal,
-        { error: '' }
-    );
-    const [deleteState, deleteAction, deletePending] = useActionState<ActionState, FormData>(
-        deleteMeal,
-        { error: '' }
-    );
-    const [hasChanged, setHasChanged] = useState(false);
-
+    
     const initialValues = {
         name: meal.name,
         description: meal.description,
@@ -102,15 +77,6 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             unit: "" + ingredient.unit,
         })),
     };
-
-    const [currentValues, setCurrentValues] = useState(initialValues);
-    const [newIngredient, setNewIngredient] = useState({ name: '', quantity: '', unit: '' });
-
-    useEffect(() => {
-        if (state?.success || deleteState?.success) {
-            setIsOpen(false);
-        }
-    }, [state, deleteState]);
 
     const handleInputChange = (field: string, value: any) => {
         setCurrentValues((prevValues) => {
@@ -139,24 +105,67 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
         }));
     };
 
-    const addNewIngredient = () => {
+    const addNewIngredient = async () => {
         if (newIngredient.name && newIngredient.quantity && newIngredient.unit) {
-            const newIngredientWithId = {
-                ...newIngredient,
-                id: `new_${Date.now()}`, // Generate a temporary ID for the new ingredient
-            };
+            const ingredientFormData = new FormData();
+            ingredientFormData.append('name', newIngredient.name);
+            ingredientFormData.append('quantity', newIngredient.quantity);
+            ingredientFormData.append('unit', newIngredient.unit);
+
+            const createdIngredient = await createIngredient(user, ingredientFormData);
+            const ingredientMealFormData = new FormData();
+            ingredientMealFormData.append('mealId', meal.id);
+            ingredientMealFormData.append('ingredientId', createdIngredient.id);
+            ingredientMealFormData.append('quantity_per_person', newIngredient.quantity);
+            ingredientMealFormData.append('unit', newIngredient.unit);
+            await addIngredientToMeal(user, ingredientMealFormData);
+
             setCurrentValues((prevValues) => ({
                 ...prevValues,
-                ingredients: [...prevValues.ingredients, newIngredientWithId],
+                ingredients: [...prevValues.ingredients, createdIngredient],
             }));
+
             setNewIngredient({ name: '', quantity: '', unit: '' });
-            setHasChanged(true);
+            setSearchQuery('');
         }
     };
 
     const validateInput = (value: any) => {
         return value !== '';
     };
+    
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery] = useDebounce(searchQuery, 300);
+    const [suggestedIngredients, setSuggestedIngredients] = useState<{ name: string }[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const [hasChanged, setHasChanged] = useState(false);
+    const [currentValues, setCurrentValues] = useState(initialValues);
+    const [newIngredient, setNewIngredient] = useState({ name: '', quantity: '', unit: '' });
+    
+    const [state, formAction, pending] = useActionState<ActionState, FormData>(
+        handleUpdateMeal,
+        { error: '' }
+    );
+    const [deleteState, deleteAction, deletePending] = useActionState<ActionState, FormData>(
+        deleteMeal,
+        { error: '' }
+    );
+    
+    useEffect(() => {
+        if (debouncedQuery) {
+            fetchAllIngredients(user, debouncedQuery).then((data) => {
+                setSuggestedIngredients(data);
+            });
+        } else {
+            setSuggestedIngredients([]);
+        }
+    }, [debouncedQuery]);
+
+    useEffect(() => {
+        if (state?.success || deleteState?.success) {
+            setIsOpen(false);
+        }
+    }, [state, deleteState]);
 
     return (
         <>
@@ -261,66 +270,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {ingredients.map((ingredient: any, index: number) => (
-                                            <tr key={ingredient.id}>
-                                                <input
-                                                    id={`id_${ingredient.id}`}
-                                                    name={`id_${ingredient.id}`}
-                                                    type="text"
-                                                    className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary hidden"
-                                                    defaultValue={ingredient.id}
-                                                    readOnly
-                                                />
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    <input
-                                                        id={`name_${ingredient.id}`}
-                                                        name={`name_${ingredient.id}`}
-                                                        type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
-                                                        placeholder={ingredient.name}
-                                                        defaultValue={ingredient.name}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value;
-                                                            if (validateInput(value)) {
-                                                                handleIngredientChange(index, 'name', value);
-                                                            }
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
-                                                    <input
-                                                        id={`quantity_${ingredient.id}`}
-                                                        name={`quantity_${ingredient.id}`}
-                                                        type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary focus:text-gray-900"
-                                                        pattern="\d+"
-                                                        title='Only numbers are allowed'
-                                                        placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
-                                                        defaultValue={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value;
-                                                            if (validateInput(value)) {
-                                                                handleIngredientChange(index, 'quantity', value);
-                                                            }
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
-                                                    <input
-                                                        id={`unit_${ingredient.id}`}
-                                                        name={`unit_${ingredient.id}`}
-                                                        type="text"
-                                                        className="bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary"
-                                                        placeholder={ingredient.unit}
-                                                        defaultValue={ingredient.unit}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value;
-                                                            if (validateInput(value)) {
-                                                                handleIngredientChange(index, 'unit', value);
-                                                            }
-                                                        }}
-                                                    />
-                                                </td>
-                                            </tr>
+                                            
                                         ))}
                                         <tr>
                                             <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -383,10 +333,10 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                             <td>
                                                 <Button
                                                     type="button"
-                                                    className="rounded-xl text-white font-semibold"
+                                                    className="rounded-xl text-primary font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent hover:border-primary hover:text-primary"
                                                     onClick={addNewIngredient}
                                                 >
-                                                    Add
+                                                    <Plus size={16} />
                                                 </Button>
                                             </td>
                                         </tr>
