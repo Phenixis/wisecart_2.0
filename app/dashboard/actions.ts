@@ -468,23 +468,13 @@ export const removeIngredientFromMeal = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
 
-        const mealId = await db
-            .select({
-                id: mealsIngredients.id,
-            })
-            .from(mealsIngredients)
+        await Promise.all([
+            db.delete(mealsIngredients)
             .where(
                 and(
                     eq(mealsIngredients.mealId, Number(data.mealId)),
                     eq(mealsIngredients.ingredientId, Number(data.ingredientId)),
                 ),
-            ).limit(1);
-
-        await Promise.all([
-            db
-            .delete(mealsIngredients)
-            .where(
-                eq(mealsIngredients.mealId, mealId[0].id),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_INGREDIENT_FROM_MEAL),
         ]);

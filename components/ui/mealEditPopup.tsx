@@ -11,6 +11,7 @@ import { User } from '@/lib/db/schema';
 
 export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
+        console.log('UPDATE FUNCTION BEGINS ******************');
         // UPDATING MEAL
         console.log('Updating meal...');
         const updatedMeal : FormData = new FormData();
@@ -19,11 +20,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
         updatedMeal.append('description', formData.get('description') as string);
         updatedMeal.append('nbPersons', formData.get('nbPersons') as string);
 
-        const mealChanged = updatedMeal.get('meal') !== initialMealValues.name ||
-            updatedMeal.get('description') !== initialIngredients.description ||
-            updatedMeal.get('nbPersons') !== initialIngredients.nbPersons;
-
-        if (mealChanged) {
+        if (JSON.stringify(currentMealValues) !== JSON.stringify(initialMealValues)) {
             await updateMeal(state, updatedMeal);
             console.log('Meal updated');
         } else {
@@ -42,6 +39,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
 
                 console.log(`Ingredient ${ingredientId} deleted`);
             }
+            setDeletedIngredients([]);
         }
 
         // UPDATING INGREDIENTS
@@ -53,11 +51,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             updatedIngredient.append('quantity', ingredient.quantity);
             updatedIngredient.append('unit', ingredient.unit);
 
-            const ingredientChanged = updatedIngredient.get('name') !== initialIngredients.name ||
-                updatedIngredient.get('quantity') !== initialIngredients.quantity ||
-                updatedIngredient.get('unit') !== initialIngredients.unit;
-
-            if (ingredientChanged) {
+            if (false) { // TODO : check if ingredient has changed using JSON.stringify
                 await updateIngredient(state, updatedIngredient);
                 console.log(`Ingredient ${ingredient.id} updated`);
             } else {
@@ -73,12 +67,12 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             newIngredient.append('quantity', ingredient.quantity);
             newIngredient.append('unit', ingredient.unit);
 
-            await createIngredient(state, newIngredient);
+            await createIngredient(state, newIngredient); // TODO : check if ingredient already exists and link it to the meal
             console.log(`Ingredient ${ingredient.name} added`);
         }
 
         setIsOpen(false);
-        console.log('Meal updated');
+        console.log("UPDATE FUNCTION ENDS ******************");
     };
     
     const initialMealValues = {
@@ -90,9 +84,18 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
     const initialIngredients = ingredients.map((ingredient: any) => ({
         id: ingredient.id,
         name: ingredient.name,
-        quantity: ingredient.quantity / ingredient.nbPersons,
+        quantity: "" + ingredient.quantity / ingredient.nbPersons,
         unit: ingredient.unit,
     }));
+
+    const verifyChanges = () => {
+        const hasChanged = JSON.stringify(currentMealValues) !== JSON.stringify(initialMealValues) ||
+            JSON.stringify(currentIngredients) !== JSON.stringify(initialIngredients) ||
+            JSON.stringify(newIngredients) !== JSON.stringify([]) ||
+            JSON.stringify(deletedIngredients) !== JSON.stringify([]);
+
+        setHasChanged(hasChanged);
+    };
 
     const handleInputChange = (field: string, value: any) => {
         setCurrentMealValues((prevValues) => {
@@ -176,6 +179,11 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             setIsOpen(false);
         }
     }, [state, deleteState]);
+
+    useEffect(() => {
+        verifyChanges();
+    }, [currentMealValues, currentIngredients, newIngredients, deletedIngredients]);
+
 
     return (
         <>
@@ -370,7 +378,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                             if (deletedIngredients.includes(ingredient.id)) {
                                                                 setDeletedIngredients((prevValues) => prevValues.filter((id) => id !== ingredient.id));
                                                             } else {
-                                                                setDeletedIngredients((prevValues) => [...prevValues, ingredient.id]);
+                                                                setDeletedIngredients((prevValues) => [...prevValues, ingredient.id]); 
                                                             }
                                                         }}
                                                     >
