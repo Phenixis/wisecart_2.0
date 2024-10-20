@@ -456,8 +456,8 @@ export const addIngredientToMeal = validatedActionWithUser(
 // Remove an ingredient from a meal
 
 const removeIngredientFromMealSchema = z.object({
-    mealId: z.number(),
-    ingredientId: z.number(),
+    mealId: z.string().regex(/^\d+$/),
+    ingredientId: z.string().regex(/^\d+$/),
 });
 
 export const removeIngredientFromMeal = validatedActionWithUser(
@@ -475,8 +475,8 @@ export const removeIngredientFromMeal = validatedActionWithUser(
             .from(mealsIngredients)
             .where(
                 and(
-                    eq(mealsIngredients.mealId, data.mealId),
-                    eq(mealsIngredients.ingredientId, data.ingredientId),
+                    eq(mealsIngredients.mealId, Number(data.mealId)),
+                    eq(mealsIngredients.ingredientId, Number(data.ingredientId)),
                 ),
             ).limit(1);
 
