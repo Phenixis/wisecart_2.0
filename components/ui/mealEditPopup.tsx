@@ -6,60 +6,108 @@ import { useState, useActionState, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { ActionState } from '@/lib/auth/middleware';
-import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal, fetchAllIngredients, createIngredient, addIngredientToMeal } from '@/app/dashboard/actions';
+import { updateMeal, deleteMeal, updateIngredient, updateIngredientOfMeal, fetchAllIngredients, createIngredient, addIngredientToMeal, removeIngredientFromMeal } from '@/app/dashboard/actions';
 import { User } from '@/lib/db/schema';
 
 export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
+        // UPDATING MEAL
         console.log('Updating meal...');
+        const updatedMeal : FormData = new FormData();
+        updatedMeal.append('id', meal.id);
+        updatedMeal.append('name', formData.get('name') as string);
+        updatedMeal.append('description', formData.get('description') as string);
+        updatedMeal.append('nbPersons', formData.get('nbPersons') as string);
 
-        const updatedMeal = {
-            name: formData.get('name'),
-            description: formData.get('description'),
-            nbPersons: formData.get('nbPersons'),
-        };
-
-        const mealChanged = updatedMeal.name !== initialValues.name ||
-            updatedMeal.description !== initialValues.description ||
-            updatedMeal.nbPersons !== initialValues.nbPersons;
+        const mealChanged = updatedMeal.get('meal') !== initialMealValues.name ||
+            updatedMeal.get('description') !== initialIngredients.description ||
+            updatedMeal.get('nbPersons') !== initialIngredients.nbPersons;
 
         if (mealChanged) {
-            await updateMeal(state, formData);
+            await updateMeal(state, updatedMeal);
+            console.log('Meal updated');
+        } else {
+            console.log('No changes, meal not updated');
         }
 
-        // TODO
+        // DELETING INGREDIENTS
+        console.log('Deleting ingredients...');
+        if (deletedIngredients.length > 0) {
+            for (const ingredientId of deletedIngredients) {
+                const deletedIngredientsFD : FormData = new FormData();
+                deletedIngredientsFD.append('id', meal.id);
+                deletedIngredientsFD.append('ingredients', String(ingredientId));
+
+                await removeIngredientFromMeal(state, deletedIngredientsFD);
+
+                console.log(`Ingredient ${ingredientId} deleted`);
+            }
+        }
+
+        // UPDATING INGREDIENTS
+        console.log('Updating ingredients...');
+        for (const ingredient of currentIngredients) {
+            const updatedIngredient : FormData = new FormData();
+            updatedIngredient.append('id', ingredient.id);
+            updatedIngredient.append('name', ingredient.name);
+            updatedIngredient.append('quantity', ingredient.quantity);
+            updatedIngredient.append('unit', ingredient.unit);
+
+            const ingredientChanged = updatedIngredient.get('name') !== initialIngredients.name ||
+                updatedIngredient.get('quantity') !== initialIngredients.quantity ||
+                updatedIngredient.get('unit') !== initialIngredients.unit;
+
+            if (ingredientChanged) {
+                await updateIngredient(state, updatedIngredient);
+                console.log(`Ingredient ${ingredient.id} updated`);
+            } else {
+                console.log(`Ingredient ${ingredient.id} not updated`);
+            }
+        }
+
+        // ADDING NEW INGREDIENTS
+        console.log('Adding new ingredients...');
+        for (const ingredient of newIngredients) {
+            const newIngredient : FormData = new FormData();
+            newIngredient.append('name', ingredient.name);
+            newIngredient.append('quantity', ingredient.quantity);
+            newIngredient.append('unit', ingredient.unit);
+
+            await createIngredient(state, newIngredient);
+            console.log(`Ingredient ${ingredient.name} added`);
+        }
 
         setIsOpen(false);
         console.log('Meal updated');
     };
     
-    const initialValues = {
+    const initialMealValues = {
         name: meal.name,
         description: meal.description,
         nbPersons: "" + meal.nbPersons,
-        ingredients: ingredients.map((ingredient: any) => ({
-            id: ingredient.id,
-            name: ingredient.name,
-            quantity: "" + ingredient.quantity / ingredient.nbPersons,
-            unit: "" + ingredient.unit,
-        })),
     };
 
+    const initialIngredients = ingredients.map((ingredient: any) => ({
+        id: ingredient.id,
+        name: ingredient.name,
+        quantity: ingredient.quantity / ingredient.nbPersons,
+        unit: ingredient.unit,
+    }));
+
     const handleInputChange = (field: string, value: any) => {
-        setCurrentValues((prevValues) => {
+        setCurrentMealValues((prevValues) => {
             const newValues = { ...prevValues, [field]: "" + value };
-            const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
+            const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialMealValues);
             setHasChanged(hasChanged);
             return newValues;
         });
     };
 
     const handleIngredientChange = (index: number, field: string, value: any) => {
-        setCurrentValues((prevValues) => {
-            const newIngredients = [...prevValues.ingredients];
-            newIngredients[index] = { ...newIngredients[index], [field]: "" + value };
-            const newValues = { ...prevValues, ingredients: newIngredients };
-            const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialValues);
+        setCurrentIngredients((prevValues: any) => {
+            const newValues = [...prevValues];
+            newValues[index] = { ...newValues[index], [field]: value };
+            const hasChanged = JSON.stringify(newValues) !== JSON.stringify(initialIngredients);
             setHasChanged(hasChanged);
             return newValues;
         });
@@ -84,9 +132,6 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                 },
             ]);
 
-            console.log(newIngredients);
-            // The new ingredient is in the array but doesnt show up in the table
-
             setNewIngredient({ name: '', quantity: '', unit: '' });
             setSearchQuery('');
         }
@@ -101,7 +146,8 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
     const [suggestedIngredients, setSuggestedIngredients] = useState<{ name: string }[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [hasChanged, setHasChanged] = useState(false);
-    const [currentValues, setCurrentValues] = useState(initialValues);
+    const [currentMealValues, setCurrentMealValues] = useState(initialMealValues);
+    const [currentIngredients, setCurrentIngredients] = useState(initialIngredients);
     const [newIngredient, setNewIngredient] = useState({ name: '', quantity: '', unit: '' });
     const [newIngredients, setNewIngredients] = useState<{ id: number, name: string, quantity: string, unit: string}[]>([]);
     const [deletedIngredients, setDeletedIngredients] = useState<number[]>([]);
