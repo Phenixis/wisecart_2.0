@@ -6,7 +6,6 @@ export default function Question({ props }) {
     if (props.answer) {
         if (props.ol) {
             let ol = props.ol.split("\n").map((li, index) => {
-                console
                 return <li key={index}>{li}</li>;
             })
             answer = 
