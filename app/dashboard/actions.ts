@@ -97,6 +97,7 @@ export async function fetchAllIngredients(user: User, search: string) {
 
     return db
         .select({
+            id : ingredients.id,
             name: ingredients.name,
         })
         .from(ingredients)
@@ -128,6 +129,7 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
             unit: mealsIngredients.unit,
             quantity: sql<number>`sum(${mealsIngredients.quantity_per_person} * ${meals.nbPersons})`,
             nbPersons: meals.nbPersons,
+            mealsIngredientsId: mealsIngredients.id,
         })
         .from(ingredients)
         .innerJoin(mealsIngredients, eq(ingredients.id, mealsIngredients.ingredientId))
@@ -143,6 +145,7 @@ export async function getIngredientsOfMeal(user: User, mealId: number) {
             ingredients.id,
             mealsIngredients.unit,
             meals.nbPersons,
+            mealsIngredients.id,
         )
         .orderBy(asc(ingredients.name));
 };
@@ -270,7 +273,7 @@ export const deleteIngredient = validatedActionWithUser(
 const createMealSchema = z.object({
     name: z.string().min(1),
     description: z.string().optional(),
-    nbPersons: z.number().int().positive(),
+    nbPersons: z.string().regex(/^\d+$/),
     ingredients: z.array(createIngredientSchema),
 });
 
@@ -283,7 +286,9 @@ export const createMeal = validatedActionWithUser(
         }
 
         const newMeal: NewMeal = {
-            ...data,
+            name: data.name,
+            description: data.description,
+            nbPersons: Number(data.nbPersons),
             createdBy: user.id,
             teamId: team.id,
         };
@@ -431,11 +436,10 @@ export const updateIngredientOfMeal = validatedActionWithUser(
 // Add an ingredient to a meal
 
 const addIngredientToMealSchema = z.object({
-    mealId: z.number(),
-    ingredientId: z.number(),
-    quantity_per_person: z.number().int().positive(),
+    mealId: z.string().regex(/^\d+$/),
+    ingredientId: z.string().regex(/^\d+$/),
+    quantity_per_person: z.string().regex(/^\d+$/),
     unit: z.string().min(1),
-    quantity: z.number().int().positive().default(1),
 });
 
 export const addIngredientToMeal = validatedActionWithUser(
@@ -447,7 +451,13 @@ export const addIngredientToMeal = validatedActionWithUser(
         }
 
         await Promise.all([
-            db.insert(mealsIngredients).values(data),
+            db.insert(mealsIngredients).values({
+                mealId: Number(data.mealId),
+                ingredientId: Number(data.ingredientId),
+                quantity_per_person: Number(data.quantity_per_person),
+                unit: data.unit,
+            }
+            ),
             logActivity(team.id, user.id, ActivityType.ADDED_INGREDIENT_TO_MEAL),
         ]);
     }
@@ -456,8 +466,7 @@ export const addIngredientToMeal = validatedActionWithUser(
 // Remove an ingredient from a meal
 
 const removeIngredientFromMealSchema = z.object({
-    mealId: z.string().regex(/^\d+$/),
-    ingredientId: z.string().regex(/^\d+$/),
+    mealsIngredientsId: z.string().regex(/^\d+$/),
 });
 
 export const removeIngredientFromMeal = validatedActionWithUser(
@@ -472,8 +481,7 @@ export const removeIngredientFromMeal = validatedActionWithUser(
             db.delete(mealsIngredients)
             .where(
                 and(
-                    eq(mealsIngredients.mealId, Number(data.mealId)),
-                    eq(mealsIngredients.ingredientId, Number(data.ingredientId)),
+                    eq(mealsIngredients.id, Number(data.mealsIngredientsId)),
                 ),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_INGREDIENT_FROM_MEAL),
@@ -484,7 +492,7 @@ export const removeIngredientFromMeal = validatedActionWithUser(
 // Delete a meal
 
 const deleteMealSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const deleteMeal = validatedActionWithUser(
@@ -496,7 +504,7 @@ export const deleteMeal = validatedActionWithUser(
         }
 
         await Promise.all([
-            db.update(meals).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(meals.id, data.id)),
+            db.update(meals).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(meals.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.DELETE_MEAL),
         ]);
     },
@@ -591,7 +599,7 @@ export async function getLastShoppingList(user: User) {
 // Get a shopping list as CSV
 
 const getShoppingListAsCsvSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const getShoppingListAsCsv = validatedActionWithUser(
@@ -602,7 +610,7 @@ export const getShoppingListAsCsv = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
 
-        const ingredients = await getShoppingListIngredients(data.id);
+        const ingredients = await getShoppingListIngredients(Number(data.id));
 
         if (ingredients) {
             logActivity(team.id, user.id, ActivityType.EXPORTED_SHOPPING_LIST_AS_CSV);
@@ -617,7 +625,7 @@ export const getShoppingListAsCsv = validatedActionWithUser(
 // Get a shopping list as Markdown
 
 const getShoppingListAsMarkdownSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const getShoppingListAsMarkdown = validatedActionWithUser(
@@ -628,7 +636,7 @@ export const getShoppingListAsMarkdown = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
 
-        const ingredients = await getShoppingListIngredients(data.id);
+        const ingredients = await getShoppingListIngredients(Number(data.id));
 
         if (ingredients) {
             logActivity(team.id, user.id, ActivityType.EXPORTED_SHOPPING_LIST_AS_MARKDOWN);
@@ -643,7 +651,7 @@ export const getShoppingListAsMarkdown = validatedActionWithUser(
 // Get a shopping list as text
 
 const getShoppingListAsTextSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const getShoppingListAsText = validatedActionWithUser(
@@ -654,7 +662,7 @@ export const getShoppingListAsText = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
 
-        const ingredients = await getShoppingListIngredients(data.id);
+        const ingredients = await getShoppingListIngredients(Number(data.id));
 
         if (ingredients) {
             logActivity(team.id, user.id, ActivityType.EXPORTED_SHOPPING_LIST_AS_TEXT);
@@ -669,9 +677,8 @@ export const getShoppingListAsText = validatedActionWithUser(
 // Update a shopping list
 
 const updateShoppingListSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
     name: z.string().min(1),
-    description: z.string().optional(),
 });
 
 export const updateShoppingList = validatedActionWithUser(
@@ -683,13 +690,14 @@ export const updateShoppingList = validatedActionWithUser(
         }
 
         const newShoppingList: NewShoppingList = {
-            ...data,
+            id: Number(data.id),
+            name: data.name,
             createdBy: user.id,
             teamId: team.id,
         };
 
         await Promise.all([
-            db.update(shoppingLists).set(newShoppingList).where(eq(shoppingLists.id, data.id)),
+            db.update(shoppingLists).set(newShoppingList).where(eq(shoppingLists.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.UPDATE_SHOPPING_LIST),
         ]);
     },
@@ -712,8 +720,8 @@ async function getOrderOfMealsInShoppingList(shoppingListId: number, mealId: num
 }
 
 const addMealToShoppingListSchema = z.object({
-    shoppingListId: z.number(),
-    mealId: z.number()
+    shoppingListId: z.string().regex(/^\d+$/),
+    mealId: z.string().regex(/^\d+$/),
 });
 
 export const addMealToShoppingList = validatedActionWithUser(
@@ -725,13 +733,13 @@ export const addMealToShoppingList = validatedActionWithUser(
             throw new Error('User does not belong to a team');
         }
 
-        const ingredientsOfMeal = await getIngredientsOfMeal(user, data.mealId);
-        const orderOfMealsInShoppingList = await getOrderOfMealsInShoppingList(data.shoppingListId, data.mealId);
+        const ingredientsOfMeal = await getIngredientsOfMeal(user, Number(data.mealId));
+        const orderOfMealsInShoppingList = await getOrderOfMealsInShoppingList(Number(data.shoppingListId), Number(data.mealId));
         
         const insertPromises = ingredientsOfMeal.map(ingredient =>
             db.insert(shoppingListsMealsIngredients).values({
-                shoppingListId: data.shoppingListId,
-                mealId: data.mealId,
+                shoppingListId: Number(data.shoppingListId),
+                mealId: Number(data.mealId),
                 ingredientId: ingredient.id,
                 mealOrder: orderOfMealsInShoppingList[0].mealOrder !== null ? orderOfMealsInShoppingList[0].mealOrder + 1 : 0,
             })
@@ -747,8 +755,8 @@ export const addMealToShoppingList = validatedActionWithUser(
 // Remove a meal from a shopping list
 
 const removeOneInstanceOfOneMealFromShoppingListSchema = z.object({
-    shoppingListId: z.number(),
-    mealId: z.number(),
+    shoppingListId: z.string().regex(/^\d+$/),
+    mealId: z.string().regex(/^\d+$/),
 });
 
 export const removeOneInstanceOfOneMealFromShoppingList = validatedActionWithUser(
@@ -766,8 +774,8 @@ export const removeOneInstanceOfOneMealFromShoppingList = validatedActionWithUse
             .from(shoppingListsMealsIngredients)
             .where(
                 and(
-                    eq(shoppingListsMealsIngredients.shoppingListId, data.shoppingListId),
-                    eq(shoppingListsMealsIngredients.mealId, data.mealId),
+                    eq(shoppingListsMealsIngredients.shoppingListId, Number(data.shoppingListId)),
+                    eq(shoppingListsMealsIngredients.mealId, Number(data.mealId)),
                 ),
             ).limit(1);
 
@@ -785,8 +793,8 @@ export const removeOneInstanceOfOneMealFromShoppingList = validatedActionWithUse
 // Remove all instances of one meal from a shopping list
 
 const removeAllInstanceOfOneMealFromShoppingListSchema = z.object({
-    shoppingListId: z.number(),
-    mealId: z.number(),
+    shoppingListId: z.string().regex(/^\d+$/),
+    mealId: z.string().regex(/^\d+$/),
 });
 
 export const removeAllInstanceOfOneMealFromShoppingList = validatedActionWithUser(
@@ -802,8 +810,8 @@ export const removeAllInstanceOfOneMealFromShoppingList = validatedActionWithUse
             .delete(shoppingListsMealsIngredients)
             .where(
                 and(
-                    eq(shoppingListsMealsIngredients.shoppingListId, data.shoppingListId),
-                    eq(shoppingListsMealsIngredients.mealId, data.mealId),
+                    eq(shoppingListsMealsIngredients.shoppingListId, Number(data.shoppingListId)),
+                    eq(shoppingListsMealsIngredients.mealId, Number(data.mealId)),
                 ),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_ALL_INSTANCES_OF_ONE_MEAL_FROM_SHOPPING_LIST),
@@ -814,7 +822,7 @@ export const removeAllInstanceOfOneMealFromShoppingList = validatedActionWithUse
 // Remove all meals from a shopping list
 
 const removeAllMealsFromShoppingListSchema = z.object({
-    shoppingListId: z.number(),
+    shoppingListId: z.string().regex(/^\d+$/),
 });
 
 export const removeAllMealsFromShoppingList = validatedActionWithUser(
@@ -829,7 +837,7 @@ export const removeAllMealsFromShoppingList = validatedActionWithUser(
             db
             .delete(shoppingListsMealsIngredients)
             .where(
-                eq(shoppingListsMealsIngredients.shoppingListId, data.shoppingListId),
+                eq(shoppingListsMealsIngredients.shoppingListId, Number(data.shoppingListId)),
             ),
             logActivity(team.id, user.id, ActivityType.REMOVED_ALL_MEALS_FROM_SHOPPING_LIST),
         ]);
@@ -839,7 +847,7 @@ export const removeAllMealsFromShoppingList = validatedActionWithUser(
 // Complete a shopping list
 
 const completeShoppingListSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const completeShoppingList = validatedActionWithUser(
@@ -851,7 +859,7 @@ export const completeShoppingList = validatedActionWithUser(
         }
 
         await Promise.all([
-            db.update(shoppingLists).set({completedAt: sql`CURRENT_TIMESTAMP`}).where(eq(shoppingLists.id, data.id)),
+            db.update(shoppingLists).set({completedAt: sql`CURRENT_TIMESTAMP`}).where(eq(shoppingLists.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.COMPLETE_SHOPPING_LIST),
         ]);
     },
@@ -860,7 +868,7 @@ export const completeShoppingList = validatedActionWithUser(
 // Uncomplete a shopping list
 
 const uncompleteShoppingListSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const uncompleteShoppingList = validatedActionWithUser(
@@ -872,7 +880,7 @@ export const uncompleteShoppingList = validatedActionWithUser(
         }
 
         await Promise.all([
-            db.update(shoppingLists).set({completedAt: null}).where(eq(shoppingLists.id, data.id)),
+            db.update(shoppingLists).set({completedAt: null}).where(eq(shoppingLists.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.UNCOMPLETE_SHOPPING_LIST),
         ]);
     },
@@ -881,7 +889,7 @@ export const uncompleteShoppingList = validatedActionWithUser(
 // Delete a shopping list
 
 const deleteShoppingListSchema = z.object({
-    id: z.number(),
+    id: z.string().regex(/^\d+$/),
 });
 
 export const deleteShoppingList = validatedActionWithUser(
@@ -893,7 +901,7 @@ export const deleteShoppingList = validatedActionWithUser(
         }
 
         await Promise.all([
-            db.update(shoppingLists).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(shoppingLists.id, data.id)),
+            db.update(shoppingLists).set({deletedAt: sql`CURRENT_TIMESTAMP`}).where(eq(shoppingLists.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.DELETE_SHOPPING_LIST),
         ]);
     },
