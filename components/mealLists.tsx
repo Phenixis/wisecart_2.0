@@ -15,7 +15,7 @@ export default async function MealLists() {
 
     return (
         <Suspense fallback={<MealListsSkeleton />}>
-            <div className="p-4 flex items-center flex-wrap">
+            <div className="p-4 flex items-start flex-wrap">
                 {meals.map((meal) => (
                     <Meal key={meal.id} mode={"card"} user={user} meal={meal} />
                 ))}
