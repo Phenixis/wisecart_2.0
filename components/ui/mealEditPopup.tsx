@@ -11,9 +11,7 @@ import { User } from '@/lib/db/schema';
 
 export default function MealEditPopup({ user, meal, ingredients }: { user: User, meal: any, ingredients: any }) {
     const handleUpdateMeal = async (state: ActionState, formData: FormData) => {
-        console.log('UPDATE FUNCTION BEGINS ******************');
-        // UPDATING MEAL
-        console.log('Updating meal...');
+        // UPDATING MEAL - DONE
         const updatedMeal : FormData = new FormData();
         updatedMeal.append('id', meal.id);
         updatedMeal.append('name', formData.get('name') as string);
@@ -22,28 +20,20 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
 
         if (JSON.stringify(currentMealValues) !== JSON.stringify(initialMealValues)) {
             await updateMeal(state, updatedMeal);
-            console.log('Meal updated');
-        } else {
-            console.log('No changes, meal not updated');
         }
 
-        // DELETING INGREDIENTS
-        console.log('Deleting ingredients...');
+        // DELETING INGREDIENTS - DONE
         if (deletedIngredients.length > 0) {
-            for (const ingredientId of deletedIngredients) {
+            for (const mealsIngredientsId of deletedIngredients) {
                 const deletedIngredientsFD : FormData = new FormData();
-                deletedIngredientsFD.append('id', meal.id);
-                deletedIngredientsFD.append('ingredients', String(ingredientId));
+                deletedIngredientsFD.append('mealsIngredientsId', "" + mealsIngredientsId);
 
                 await removeIngredientFromMeal(state, deletedIngredientsFD);
-
-                console.log(`Ingredient ${ingredientId} deleted`);
             }
             setDeletedIngredients([]);
         }
 
-        // UPDATING INGREDIENTS
-        console.log('Updating ingredients...');
+        // UPDATING INGREDIENTS - DONE
         for (const ingredient of currentIngredients) {
             const updatedIngredient : FormData = new FormData();
             updatedIngredient.append('id', ingredient.id);
@@ -51,28 +41,33 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
             updatedIngredient.append('quantity', ingredient.quantity);
             updatedIngredient.append('unit', ingredient.unit);
 
-            if (false) { // TODO : check if ingredient has changed using JSON.stringify
+            // TODO : check if ingredient has changed using JSON.stringify
+            if (JSON.stringify(ingredient) !== JSON.stringify(initialIngredients.find((i: { id: any; }) => i.id === ingredient.id))) {
                 await updateIngredient(state, updatedIngredient);
-                console.log(`Ingredient ${ingredient.id} updated`);
-            } else {
-                console.log(`Ingredient ${ingredient.id} not updated`);
             }
         }
 
-        // ADDING NEW INGREDIENTS
-        console.log('Adding new ingredients...');
+        // ADDING NEW INGREDIENTS - DONE
         for (const ingredient of newIngredients) {
             const newIngredient : FormData = new FormData();
             newIngredient.append('name', ingredient.name);
-            newIngredient.append('quantity', ingredient.quantity);
-            newIngredient.append('unit', ingredient.unit);
 
-            await createIngredient(state, newIngredient); // TODO : check if ingredient already exists and link it to the meal
-            console.log(`Ingredient ${ingredient.name} added`);
+            await createIngredient(state, newIngredient);
+
+            const ingredientId = await fetchAllIngredients(user, ingredient.name);
+            const ingredientIdValue = ingredientId[0].id;
+
+            const newIngredientToMeal : FormData = new FormData();
+            newIngredientToMeal.append('mealId', meal.id);
+            newIngredientToMeal.append('ingredientId', "" + ingredientIdValue);
+            newIngredientToMeal.append('quantity_per_person', ingredient.quantity);
+            newIngredientToMeal.append('unit', ingredient.unit);
+
+            await addIngredientToMeal(state, newIngredientToMeal);
         }
+        setNewIngredients([]);
 
         setIsOpen(false);
-        console.log("UPDATE FUNCTION ENDS ******************");
     };
     
     const initialMealValues = {
@@ -304,7 +299,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`name_${ingredient.id}`}
                                                         name={`name_${ingredient.id}`}
                                                         type="text"
-                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.id) ? 'line-through text-gray-400' : ''}`}
+                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.mealsIngredientsId) ? 'line-through text-gray-400' : ''}`}
                                                         placeholder={ingredient.name}
                                                         defaultValue={ingredient.name}
                                                         onChange={(e) => {
@@ -327,7 +322,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`quantity_${ingredient.id}`}
                                                         name={`quantity_${ingredient.id}`}
                                                         type="text"
-                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.id) ? 'line-through text-gray-400' : ''}`}
+                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.mealsIngredientsId) ? 'line-through text-gray-400' : ''}`}
                                                         pattern="\d+"
                                                         title='Only numbers are allowed'
                                                         placeholder={`${Number(ingredient.quantity) / Number(ingredient.nbPersons)}`}
@@ -339,7 +334,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                             }
                                                         }}
                                                         readOnly={
-                                                            (deletedIngredients.includes(ingredient.id)) ? (
+                                                            (deletedIngredients.includes(ingredient.mealsIngredientsId)) ? (
                                                                 true
                                                             ) : (
                                                                 false
@@ -352,7 +347,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                         id={`unit_${ingredient.id}`}
                                                         name={`unit_${ingredient.id}`}
                                                         type="text"
-                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.id) ? 'line-through text-gray-400' : ''}`}
+                                                        className={`bg-transparent border-none cursor-pointer w-full max-w-fit shadow-none p-2 rounded-xl placeholder:italic placeholder:text-gray-300 focus:shadow-md hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-primary focus:border-primary ${deletedIngredients.includes(ingredient.mealsIngredientsId) ? 'line-through text-gray-400' : ''}`}
                                                         placeholder={ingredient.unit}
                                                         defaultValue={ingredient.unit}
                                                         onChange={(e) => {
@@ -362,7 +357,7 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                             }
                                                         }}
                                                         readOnly={
-                                                            (deletedIngredients.includes(ingredient.id)) ? (
+                                                            (deletedIngredients.includes(ingredient.mealsIngredientsId)) ? (
                                                                 true
                                                             ) : (
                                                                 false
@@ -373,17 +368,17 @@ export default function MealEditPopup({ user, meal, ingredients }: { user: User,
                                                 <td>
                                                     <Button
                                                         type="button"
-                                                        className={`rounded-xl ${deletedIngredients.includes(ingredient.id) ? "text-green-500" : "text-red-500"} font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent ${deletedIngredients.includes(ingredient.id) ? "hover:border-green-500 hover:text-green-500" : "hover:border-red-500 hover:text-red-500"} group`}
+                                                        className={`rounded-xl ${deletedIngredients.includes(ingredient.mealsIngredientsId) ? "text-green-500" : "text-red-500"} font-semibold bg-transparent border border-transparent p-2 hover:bg-transparent ${deletedIngredients.includes(ingredient.mealsIngredientsId) ? "hover:border-green-500 hover:text-green-500" : "hover:border-red-500 hover:text-red-500"} group`}
                                                         onClick={(e) => {
-                                                            if (deletedIngredients.includes(ingredient.id)) {
-                                                                setDeletedIngredients((prevValues) => prevValues.filter((id) => id !== ingredient.id));
+                                                            if (deletedIngredients.includes(ingredient.mealsIngredientsId)) {
+                                                                setDeletedIngredients((prevValues) => prevValues.filter((id) => id !== ingredient.mealsIngredientsId));
                                                             } else {
-                                                                setDeletedIngredients((prevValues) => [...prevValues, ingredient.id]); 
+                                                                setDeletedIngredients((prevValues) => [...prevValues, ingredient.mealsIngredientsId]); 
                                                             }
                                                         }}
                                                     >
                                                         {
-                                                            deletedIngredients.includes(ingredient.id) ? (
+                                                            deletedIngredients.includes(ingredient.mealsIngredientsId) ? (
                                                                 <Plus size={16}/>
                                                             ) : (
                                                                 <Trash size={16}/>
