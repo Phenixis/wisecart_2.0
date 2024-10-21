@@ -37,29 +37,33 @@ const createIngredientSchema = z.object({
 export const createIngredient = validatedActionWithUser(
     createIngredientSchema,
     async (data: z.infer<typeof createIngredientSchema>, _, user) => {
-        const team = await getTeamForUser(user.id);
-        if (!team) {
-            throw new Error('User does not belong to a team');
-        }
-
-        if (await getAllIngredients(user).then((ingredients) => ingredients.some((ingredient) => ingredient.name === data.name))) {
-            return { error: `Ingredient '${data.name}' already exists` };
-        }
-
-        const newIngredients: NewIngredient = {
-            ...data,
-            createdBy: user.id,
-            teamId: team.id,
-        };
-
-        await Promise.all([
-            db.insert(ingredients).values(newIngredients),
-            logActivity(team.id, user.id, ActivityType.CREATE_INGREDIENT),
-        ]);
-
-        return { success: `Ingredient '${data.name}' created` };
+        return createIngredientFunction(data, user);
     },
 );
+
+const createIngredientFunction = async (data: z.infer<typeof createIngredientSchema>, user: User) => {
+    const team = await getTeamForUser(user.id);
+    if (!team) {
+        throw new Error('User does not belong to a team');
+    }
+
+    if (await getAllIngredients(user).then((ingredients) => ingredients.some((ingredient) => ingredient.name === data.name))) {
+        return { error: `Ingredient '${data.name}' already exists` };
+    }
+
+    const newIngredients: NewIngredient = {
+        ...data,
+        createdBy: user.id,
+        teamId: team.id,
+    };
+
+    await Promise.all([
+        db.insert(ingredients).values(newIngredients),
+        logActivity(team.id, user.id, ActivityType.CREATE_INGREDIENT),
+    ]);
+
+    return { success: `Ingredient '${data.name}' created` };
+}
 
 // Read the list of ingredients
 
@@ -177,6 +181,8 @@ export const updateIngredient = validatedActionWithUser(
             db.update(ingredients).set(newIngredients).where(eq(ingredients.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.UPDATE_INGREDIENT),
         ]);
+
+        return { success: `Ingredient '${data.name}' updated` };
     },
 );
 
@@ -214,33 +220,19 @@ export const toggleIngredient = validatedActionWithUser(
         }
         let isToggled = await isIngredientToggled(Number(data.idIngredient), Number(data.idMeal), Number(data.idShoppingList), Number(data.mealOrder));
 
-        if (isToggled) { 
-            await Promise.all([
-                db.update(shoppingListsMealsIngredients)
-                .set({completedAt: null})
-                .where(
-                    and(
-                        eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
-                        eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
-                        eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
-                        eq(shoppingListsMealsIngredients.mealOrder, Number(data.mealOrder)),
-                    ),
+        await Promise.all([
+            db.update(shoppingListsMealsIngredients)
+            .set({completedAt: isToggled ? null : new Date()})
+            .where(
+                and(
+                    eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
+                    eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
+                    eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
+                    eq(shoppingListsMealsIngredients.mealOrder, Number(data.mealOrder)),
                 ),
-            ]);
-        } else {
-            await Promise.all([
-                db.update(shoppingListsMealsIngredients)
-                .set({completedAt: new Date()})
-                .where(
-                    and(
-                        eq(shoppingListsMealsIngredients.shoppingListId, Number(data.idShoppingList)),
-                        eq(shoppingListsMealsIngredients.ingredientId, Number(data.idIngredient)),
-                        eq(shoppingListsMealsIngredients.mealId, Number(data.idMeal)),
-                        eq(shoppingListsMealsIngredients.mealOrder, Number(data.mealOrder)),
-                    ),
-                ),
-            ]);
-        }
+            ),
+        ]);
+
         return { 'isToggled': !isToggled };
     },
 );
@@ -263,6 +255,8 @@ export const deleteIngredient = validatedActionWithUser(
             db.update(ingredients).set({deletedAt: new Date()}).where(eq(ingredients.id, Number(data.id))),
             logActivity(team.id, user.id, ActivityType.DELETE_INGREDIENT),
         ]);
+
+        return { success: `Ingredient deleted` };
     },
 );
 
@@ -274,7 +268,11 @@ const createMealSchema = z.object({
     name: z.string().min(1),
     description: z.string().optional(),
     nbPersons: z.string().regex(/^\d+$/),
-    ingredients: z.array(createIngredientSchema),
+    ingredients: z.array(z.object({
+        name: z.string().min(1),
+        quantity_per_person: z.string().regex(/^\d+$/),
+        unit: z.string().min(1),
+    })),
 });
 
 export const createMeal = validatedActionWithUser(
@@ -298,6 +296,50 @@ export const createMeal = validatedActionWithUser(
             db.insert(meals).values(newMeal),
             logActivity(team.id, user.id, ActivityType.CREATE_MEAL),
         ]);
+
+        const ingredients = await getAllIngredients(user);
+
+        const ingredientsOfMeal = data.ingredients.map(async (ingredient) =>{
+            let ingredientId = ingredients.find((i) => i.name === ingredient.name)?.id;
+            while (!ingredientId) {
+                const newIngredient = await createIngredientFunction({name: ingredient.name}, user);
+                if (newIngredient.error) {
+                    throw new Error(newIngredient.error);
+                }
+                ingredientId = ingredients.find((i) => i.name === ingredient.name)?.id;
+            }
+
+            return {
+                ingredientId,
+                quantity_per_person: ingredient.quantity_per_person,
+                unit: ingredient.unit,
+            };
+        });
+
+        const mealId = await db
+            .select({
+                id: meals.id,
+            })
+            .from(meals)
+            .where(
+                and(
+                    eq(meals.teamId, team.id),
+                    eq(meals.name, data.name),
+                ),
+            )
+            .orderBy(desc(meals.createdAt))
+            .limit(1);
+
+        await Promise.all(ingredientsOfMeal).then((ingredients) => {
+            return ingredients.map((ingredient) => {
+                db.insert(mealsIngredients).values({
+                    mealId: mealId[0].id,
+                    ingredientId: ingredient.ingredientId,
+                    quantity_per_person: Number(ingredient.quantity_per_person),
+                    unit: ingredient.unit,
+                });
+            });
+        });
     },
 );
 
